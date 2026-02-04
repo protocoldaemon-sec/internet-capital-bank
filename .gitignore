@@ -4,3 +4,8 @@ node_modules/
 .DS_Store
 # Colosseum registration files with sensitive info
 REGISTRATION_SUCCESS.md
+
+# Rust build artifacts
+target/
+**/*.rs.bk
+*.pdb
