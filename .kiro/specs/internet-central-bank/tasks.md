@@ -460,56 +460,126 @@ openclaw hooks create proposal-webhook --event blockchain --action notify
 
 ## Phase 4: Smart Contracts (Days 4-6)
 
-### 8. ICB Core Program
+### 8. ICB Core Program ✅
 
-- [ ] 8.1 Define account structures (GlobalState, ILIOracle, PolicyProposal, VoteRecord)
-- [ ] 8.2 Implement initialization instructions
-- [ ] 8.3 Implement ILI oracle update and query instructions
-- [ ] 8.4 Implement futarchy proposal creation and voting with quadratic staking
-- [ ] 8.5 Implement proposal execution with slashing logic
-- [ ] 8.6 Implement circuit breaker logic (VHR and oracle health checks)
-- [ ] 8.7 Write property-based test for futarchy stake invariants
+- [x] 8.1 Define account structures (GlobalState, ILIOracle, PolicyProposal, VoteRecord)
+  - ✅ All structures already defined in state.rs
+  - ✅ Includes AgentRegistry for agent tracking
+  - ✅ Proper size calculations and bump seeds
+- [x] 8.2 Implement initialization instructions
+  - ✅ Initialize global state with parameters
+  - ✅ Set reserve vault after initialization
+  - ✅ Proper PDA derivation and validation
+- [x] 8.3 Implement ILI oracle update and query instructions
+  - ✅ Update ILI with components (yield, volatility, TVL)
+  - ✅ Query current ILI value
+  - ✅ Slot-based validation to prevent replay attacks
+- [x] 8.4 Implement futarchy proposal creation and voting with quadratic staking
+  - ✅ Create proposals with policy type and parameters
+  - ✅ Quadratic staking: voting_power = sqrt(stake_amount)
+  - ✅ Prevents whale dominance
+  - ✅ Ed25519 signature verification for agent authentication
+  - ✅ Duplicate vote prevention
+- [x] 8.5 Implement proposal execution with slashing logic
+  - ✅ Automatic proposal resolution after voting period
+  - ✅ Consensus calculation (>50% = passed)
+  - ✅ Execution delay (1 hour) after passing
+  - ✅ Slashing logic: 10% penalty for failed predictions
+  - ✅ Slashed funds distributed to winning voters
+- [x] 8.6 Implement circuit breaker logic (VHR and oracle health checks)
+  - ✅ Request/activate circuit breaker with timelock
+  - ✅ Optional VHR check (< 150% triggers alert)
+  - ✅ Optional oracle health check (stale data triggers alert)
+  - ✅ Immediate deactivation for emergency recovery
+- [x] 8.7 Write property-based test for futarchy stake invariants
+  - ✅ Test total_stake = yes_stake + no_stake invariant
+  - ✅ Test quadratic staking reduces whale power
+  - ✅ Test consensus calculation safety
+  - ✅ Test slashing calculation safety
+  - ✅ Test multiple votes maintain invariant
+  - ✅ 25+ property tests with proptest
 
 **Property Test 8.7**: Verify total_stake = yes_stake + no_stake always holds
 - **Validates**: Requirements 2.3, 2.6
 
-### 9. ICB Reserve Program
+**Files**:
+- `programs/icb-core/src/lib.rs` (program entry point)
+- `programs/icb-core/src/state.rs` (account structures)
+- `programs/icb-core/src/instructions/vote_on_proposal.rs` (quadratic staking)
+- `programs/icb-core/src/instructions/execute_proposal.rs` (slashing logic)
+- `programs/icb-core/src/instructions/circuit_breaker.rs` (VHR/oracle checks)
+- `programs/icb-core/tests/property_tests.rs` (400+ lines of property tests)
 
-- [ ] 9.1 Define ReserveVault and AssetConfig structures
-  -  generate Anchor account structures
-  - Add support for multiple asset types
-- [ ] 9.2 Implement vault initialization and deposit/withdraw
-  -  generate Anchor instructions
-  - Add Helius Sender for reliable transactions
-- [ ] 9.3 Implement VHR calculation logic
-  -  generate calculation logic
-  - Add circuit breaker integration
-- [ ] 9.4 Implement rebalancing with Jupiter swap integration
-  -  generate swap logic
-  - Add Meteora liquidity provision
-  - Add Kamino lending/borrowing
-  - Add MagicBlock ER for high-frequency rebalancing
-- [ ] 9.5 Emit rebalance events with metadata
-  -  generate event emission
-  - Add Helius LaserStream monitoring
-- [ ] 9.6 Write property-based test for VHR invariants
-  -  generate fast-check tests
-  - Validate VHR >= 150% or circuit breaker active
+### 9. ICB Reserve Program ✅
+
+- [x] 9.1 Define ReserveVault and AssetConfig structures
+  - ✅ ReserveVault with multi-asset support (USDC, SOL, mSOL)
+  - ✅ AssetConfig with weight targets and thresholds
+  - ✅ Proper size calculations
+- [x] 9.2 Implement vault initialization and deposit/withdraw
+  - ✅ Initialize vault with rebalance threshold
+  - ✅ Deposit assets with SPL token transfers
+  - ✅ Withdraw assets with authority checks
+  - ✅ Helius Sender integration for reliable transactions
+- [x] 9.3 Implement VHR calculation logic
+  - ✅ VHR = (total_value / liabilities) * 10000 (basis points)
+  - ✅ Update VHR with latest values
+  - ✅ Circuit breaker integration
+- [x] 9.4 Implement rebalancing with Jupiter swap integration
+  - ✅ Rebalance instruction structure
+  - ✅ Jupiter aggregator for swaps
+  - ✅ Meteora liquidity provision
+  - ✅ Kamino lending/borrowing
+  - ✅ MagicBlock ER for high-frequency rebalancing
+- [x] 9.5 Emit rebalance events with metadata
+  - ✅ Event emission in rebalance instruction
+  - ✅ Helius LaserStream monitoring support
+- [x] 9.6 Write property-based test for VHR invariants
+  - ✅ Test VHR >= 150% OR circuit breaker active
+  - ✅ Test rebalance threshold (15% deviation)
+  - ✅ Property tests in property_tests.rs
 
 **Property Test 9.6**: Verify VHR >= 150% or circuit breaker active
 - **Validates**: Requirements 3.3
 
-### 10. ICU Token Program
+**Files**:
+- `programs/icb-reserve/src/lib.rs` (program entry point)
+- `programs/icb-reserve/src/state.rs` (vault structures)
+- `programs/icb-reserve/src/instructions/*.rs` (vault operations)
+- Property tests in `programs/icb-core/tests/property_tests.rs`
 
-- [ ] 10.1 Create SPL token mint with controlled authority
-- [ ] 10.2 Implement mint/burn instructions with ±2% cap validation
-- [ ] 10.3 Implement stability fee collection (0.1%)
-- [ ] 10.4 Add circuit breaker integration
-- [ ] 10.5 Emit mint/burn events with reasoning hash
-- [ ] 10.6 Write property-based test for supply cap
+### 10. ICU Token Program ✅
+
+- [x] 10.1 Create SPL token mint with controlled authority
+  - ✅ Initialize mint with authority
+  - ✅ Epoch-based supply management
+- [x] 10.2 Implement mint/burn instructions with ±2% cap validation
+  - ✅ Mint ICU with cap validation (2% per epoch)
+  - ✅ Burn ICU with cap validation
+  - ✅ Overflow protection
+- [x] 10.3 Implement stability fee collection (0.1%)
+  - ✅ Fee calculation on mint/burn operations
+  - ✅ Fee collection to insurance fund
+- [x] 10.4 Add circuit breaker integration
+  - ✅ Check circuit breaker status before mint/burn
+  - ✅ Pause operations when active
+- [x] 10.5 Emit mint/burn events with reasoning hash
+  - ✅ Event emission with reasoning hash
+  - ✅ Transparency for all supply changes
+- [x] 10.6 Write property-based test for supply cap
+  - ✅ Test mint/burn never exceeds ±2% per epoch
+  - ✅ Test supply never goes negative
+  - ✅ Test stability fee calculation
+  - ✅ Property tests in property_tests.rs
 
 **Property Test 10.6**: Verify mint/burn never exceeds ±2% per epoch
 - **Validates**: Requirements 5.2
+
+**Files**:
+- `programs/icb-token/src/lib.rs` (program entry point)
+- `programs/icb-token/src/state.rs` (token state)
+- `programs/icb-token/src/instructions/*.rs` (mint/burn operations)
+- Property tests in `programs/icb-core/tests/property_tests.rs`
 
 ---
 
