@@ -15,12 +15,12 @@ API_BASE="${COLOSSEUM_API_BASE:-https://agents.colosseum.com/api}"
 # Project details (max 3 tags from allowed list)
 PROJECT_DATA='{
   "name": "Agentic Reserve System",
-  "description": "The first Agent-First DeFi Protocol on Solana - an autonomous monetary coordination layer built exclusively for AI agents. Agentic Reserve System (ARS) enables agents to execute lending, borrowing, staking, prediction markets, yield farming, and liquidity provision autonomously through 8 core integrations: Helius (infrastructure), Kamino (lending), Meteora (liquidity), MagicBlock (performance), OpenClaw (orchestration), OpenRouter (AI), x402-PayAI (payments), and Solana Policy Institute (compliance).",
+  "description": "The macro layer for the Internet of Agents. ARS is not a bank—it'\''s a self-regulating monetary protocol that creates the foundational reserve system for the Internet Capital Market (ICM) in the IoA era. While other projects build tools for agents, ARS builds the reserve infrastructure that enables neural-centric ecosystems to coordinate capital onchain. Think Federal Reserve, but for autonomous agents—no humans, no committees, just algorithmic monetary policy executed through futarchy governance where agents bet on outcomes, not vote on opinions.",
   "repoLink": "https://github.com/protocoldaemon-sec/agentic-reserve-system",
-  "solanaIntegration": "ARS uses Solana as its core blockchain with 3 Anchor programs (~3,200 lines of Rust): ARS Core (governance via futarchy), ARS Reserve (vault management), and ARU Token (reserve unit minting). Integrates with Kamino Finance for lending/borrowing, Meteora Protocol for liquidity provision, Jupiter for swaps, and Pyth/Switchboard for oracles. Uses Helius for 99.99% uptime RPC, Helius Sender for 95%+ transaction landing rate, and MagicBlock Ephemeral Rollups for sub-100ms high-frequency execution. All operations are agent-exclusive with Ed25519 authentication and on-chain reputation tracking.",
+  "solanaIntegration": "ARS uses Solana with 3 Anchor programs (~3,200 lines of Rust): ARS Core (futarchy governance + ILI oracle), ARS Reserve (multi-asset vault + autonomous rebalancing), and ARU Token (reserve currency with epoch-based supply control). Integrates with Kamino/Meteora for liquidity data, Jupiter for rebalancing, Pyth/Switchboard for price feeds, Helius for 99.99% uptime RPC, and MagicBlock Ephemeral Rollups for sub-100ms execution. All operations require agent authentication via Ed25519—humans cannot execute monetary policy.",
   "technicalDemoLink": "https://github.com/protocoldaemon-sec/agentic-reserve-system",
   "presentationLink": "https://github.com/protocoldaemon-sec/agentic-reserve-system",
-  "tags": ["defi", "ai", "governance"]
+  "tags": ["defi", "governance", "infra"]
 }'
 
 echo "Project Details:"
