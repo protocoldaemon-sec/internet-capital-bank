@@ -26,6 +26,10 @@ pub struct CreateProposal<'info> {
     #[account(mut)]
     pub proposer: Signer<'info>,
     
+    /// CHECK: Instructions sysvar for agent verification (ARS-SA-2026-001)
+    #[account(address = anchor_lang::solana_program::sysvar::instructions::ID)]
+    pub instructions_sysvar: AccountInfo<'info>,
+    
     pub system_program: Program<'info, System>,
 }
 
@@ -35,6 +39,12 @@ pub fn handler(
     policy_params: Vec<u8>,
     duration: i64,
 ) -> Result<()> {
+    // ARS-SA-2026-001: Validate agent authentication
+    crate::validate_agent_auth(
+        &ctx.accounts.instructions_sysvar,
+        &ctx.accounts.proposer.key(),
+    )?;
+    
     require!(
         duration >= MIN_VOTING_PERIOD && duration <= MAX_VOTING_PERIOD,
         ICBError::InvalidVotingPeriod

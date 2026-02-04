@@ -24,9 +24,19 @@ pub struct ExecuteProposal<'info> {
         constraint = global_state.authority == executor.key() @ ICBError::Unauthorized // FIX #3: Require authority
     )]
     pub executor: Signer<'info>,
+    
+    /// CHECK: Instructions sysvar for agent verification (ARS-SA-2026-001)
+    #[account(address = anchor_lang::solana_program::sysvar::instructions::ID)]
+    pub instructions_sysvar: AccountInfo<'info>,
 }
 
 pub fn handler(ctx: Context<ExecuteProposal>) -> Result<()> {
+    // ARS-SA-2026-001: Validate agent authentication
+    crate::validate_agent_auth(
+        &ctx.accounts.instructions_sysvar,
+        &ctx.accounts.executor.key(),
+    )?;
+    
     let proposal = &mut ctx.accounts.proposal;
     let clock = Clock::get()?;
     

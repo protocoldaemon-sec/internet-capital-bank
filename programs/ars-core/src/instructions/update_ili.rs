@@ -20,6 +20,10 @@ pub struct UpdateILI<'info> {
     pub ili_oracle: Account<'info, ILIOracle>,
     
     pub authority: Signer<'info>,
+    
+    /// CHECK: Instructions sysvar for agent verification (ARS-SA-2026-001)
+    #[account(address = anchor_lang::solana_program::sysvar::instructions::ID)]
+    pub instructions_sysvar: AccountInfo<'info>,
 }
 
 pub fn handler(
@@ -29,6 +33,12 @@ pub fn handler(
     volatility: u32,
     tvl: u64,
 ) -> Result<()> {
+    // ARS-SA-2026-001: Validate agent authentication
+    crate::validate_agent_auth(
+        &ctx.accounts.instructions_sysvar,
+        &ctx.accounts.authority.key(),
+    )?;
+    
     let ili_oracle = &mut ctx.accounts.ili_oracle;
     let clock = Clock::get()?;
     

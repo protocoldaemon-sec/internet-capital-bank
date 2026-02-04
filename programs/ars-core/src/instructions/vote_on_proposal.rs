@@ -26,9 +26,9 @@ pub struct VoteOnProposal<'info> {
     #[account(mut)]
     pub agent: Signer<'info>,
     
-    /// CHECK: Ed25519 signature verification program (FIX #2)
-    #[account(address = solana_program::ed25519_program::ID)]
-    pub ed25519_program: AccountInfo<'info>,
+    /// CHECK: Instructions sysvar for agent verification (ARS-SA-2026-001)
+    #[account(address = anchor_lang::solana_program::sysvar::instructions::ID)]
+    pub instructions_sysvar: AccountInfo<'info>,
     
     pub system_program: Program<'info, System>,
 }
@@ -39,6 +39,12 @@ pub fn handler(
     stake_amount: u64,
     agent_signature: [u8; 64], // FIX #2: Require signature as parameter
 ) -> Result<()> {
+    // ARS-SA-2026-001: Validate agent authentication
+    crate::validate_agent_auth(
+        &ctx.accounts.instructions_sysvar,
+        &ctx.accounts.agent.key(),
+    )?;
+    
     require!(stake_amount > 0, ICBError::InvalidStakeAmount);
     
     let proposal = &mut ctx.accounts.proposal;
@@ -49,28 +55,6 @@ pub fn handler(
     require!(
         clock.unix_timestamp < proposal.end_time,
         ICBError::ProposalNotActive
-    );
-    
-    // FIX #2: Verify Ed25519 signature
-    // The signature should be verified via Ed25519Program instruction
-    // This requires the client to create an Ed25519 instruction before this one
-    // For now, we store the signature and verify it's not all zeros
-    require!(
-        agent_signature != [0u8; 64],
-        ICBError::InvalidAgentSignature
-    );
-    
-    // Note: Full Ed25519 verification requires the client to:
-    // 1. Create Ed25519Program instruction with signature, pubkey, and message
-    // 2. Include that instruction in the same transaction before this one
-    // 3. The Ed25519Program will verify the signature
-    // 4. We verify the Ed25519Program was called by checking remaining_accounts
-    
-    // Verify Ed25519 program was called (basic check)
-    require_eq!(
-        ctx.accounts.ed25519_program.key(),
-        solana_program::ed25519_program::ID,
-        ICBError::InvalidSignatureProgram
     );
     
     // Update proposal stakes with quadratic staking

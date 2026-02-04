@@ -98,4 +98,11 @@ pub enum ICBError {
     
     #[msg("Invalid ARU mint")]
     InvalidICUMint,
+    
+    // ARS-SA-2026-001: Secure Agent Verification
+    #[msg("Missing Ed25519 signature verification instruction")]
+    MissingSignatureVerification,
+    
+    #[msg("Agent public key mismatch")]
+    AgentMismatch,
 }
