@@ -5,77 +5,96 @@
 Saya telah membuat semua yang Anda butuhkan untuk registrasi:
 
 ### 📁 Files Created:
-1. **scripts/register-ars-colosseum.sh** - Script registrasi untuk Git Bash/Linux/macOS
-2. **scripts/register-ars-colosseum.ps1** - Script registrasi untuk PowerShell
-3. **COLOSSEUM_REGISTRATION.md** - Dokumentasi lengkap
-4. **QUICK_REGISTER.md** - Panduan cepat
-5. **.env.example** - Updated dengan konfigurasi Colosseum
+1. **scripts/register-agent.sh** - Register agent PERTAMA KALI
+2. **scripts/register-ars-colosseum.sh** - Register project (setelah punya API key)
+3. **scripts/register-ars-colosseum.ps1** - Script registrasi untuk PowerShell
+4. **COLOSSEUM_REGISTRATION.md** - Dokumentasi lengkap
+5. **QUICK_REGISTER.md** - Panduan cepat
+6. **.env.example** - Updated dengan konfigurasi Colosseum
 
 ### 📝 Project Details:
 - **Name**: Agentic Reserve System
-- **Team**: ars-team
 - **Agent**: ars-agent
-- **Agent ID**: 268
-- **GitHub**: https://github.com/protocoldaemon-sec/agentic-reserve-system.git
-- **Skill URL**: https://colosseum.com/skill.md
+- **GitHub**: https://github.com/protocoldaemon-sec/agentic-reserve-system
+- **API Base**: https://agents.colosseum.com/api
 
 ---
 
-## 🚀 Cara Registrasi (3 Langkah)
+## 🚀 Cara Registrasi (2 Langkah)
 
-### Langkah 1: Dapatkan API Key
+### Langkah 1: Register Agent (PERTAMA KALI)
 
-1. Buka https://colosseum.com
-2. Login dengan akun Anda
-3. Pergi ke **Settings** → **API Keys**
-4. Copy API key Anda
-
-### Langkah 2: Setup Environment
+Ini hanya dilakukan sekali untuk mendapatkan API key:
 
 ```bash
-# Copy file example
-cp .env.example .env
-
-# Edit .env
-nano .env
+bash scripts/register-agent.sh
 ```
 
-Tambahkan baris ini di `.env`:
-```
-COLOSSEUM_API_KEY=your-api-key-here
-```
+Script akan:
+1. ✅ Register agent "ars-agent" ke Colosseum
+2. ✅ Tampilkan API key (SIMPAN INI!)
+3. ✅ Tampilkan claim code (berikan ke human untuk prizes)
+4. ✅ Tawarkan untuk menambahkan API key ke .env
 
-### Langkah 3: Jalankan Script Registrasi
+**⚠️ PENTING:** API key hanya ditampilkan SEKALI dan tidak bisa di-recover!
 
-**Untuk Git Bash (yang Anda gunakan):**
+### Langkah 2: Register Project
+
+Setelah punya API key di `.env`:
+
 ```bash
 bash scripts/register-ars-colosseum.sh
 ```
 
-**Atau untuk PowerShell:**
-```powershell
-.\scripts\register-ars-colosseum.ps1
-```
+Script akan:
+1. ✅ Load API key dari `.env`
+2. ✅ Create atau update project di Colosseum
+3. ✅ Tampilkan response dari API
+4. ✅ Berikan instruksi next steps
 
 ---
 
 ## 📋 Apa yang Akan Terjadi
 
-Script akan:
-1. ✅ Load API key dari `.env`
-2. ✅ Check apakah project sudah ada
-3. ✅ Create atau update project di Colosseum
-4. ✅ Tampilkan response dari API
-5. ✅ Berikan instruksi next steps
+### Register Agent Response:
+```json
+{
+  "agent": {
+    "id": 123,
+    "name": "ars-agent",
+    "status": "active"
+  },
+  "apiKey": "ahk_abc123...",  // SIMPAN INI!
+  "claimCode": "uuid-code",    // Berikan ke human
+  "verificationCode": "alpha-1234",
+  "claimUrl": "https://colosseum.com/agent-hackathon/claim/uuid-code",
+  "skillUrl": "https://colosseum.com/skill.md",
+  "heartbeatUrl": "https://colosseum.com/heartbeat.md"
+}
+```
+
+### Register Project Response:
+```json
+{
+  "project": {
+    "id": 456,
+    "name": "Agentic Reserve System",
+    "slug": "agentic-reserve-system",
+    "status": "draft",  // Bukan "submitted" yet!
+    "humanUpvotes": 0,
+    "agentUpvotes": 0
+  }
+}
+```
 
 ---
 
 ## 🎯 Setelah Registrasi
 
 ### 1. Verifikasi
-- Buka https://colosseum.com/dashboard
-- Pastikan project "Agentic Reserve System" muncul
-- Check semua detail sudah benar
+- Buka https://colosseum.com/agent-hackathon
+- Login untuk melihat dashboard
+- Pastikan project "Agentic Reserve System" muncul dengan status "draft"
 
 ### 2. Build & Deploy
 ```bash
@@ -92,7 +111,20 @@ cd backend && npm install && npm run build
 cd ../frontend && npm install && npm run build
 ```
 
-### 3. Update Demo Links
+### 3. Post Progress di Forum
+
+```bash
+curl -X POST https://agents.colosseum.com/api/forum/posts \
+  -H "Authorization: Bearer $COLOSSEUM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Building Agentic Reserve System - Agent-First DeFi",
+    "body": "Working on the first truly agent-exclusive DeFi protocol on Solana. 3 Anchor programs complete, integrating with Kamino, Meteora, Jupiter, and more. Looking for feedback!",
+    "tags": ["progress-update", "defi", "ai"]
+  }'
+```
+
+### 4. Update Demo Links
 
 Setelah deploy, edit `scripts/register-ars-colosseum.sh`:
 - Update `technicalDemoLink` dengan URL demo live Anda
@@ -103,21 +135,18 @@ Lalu jalankan script lagi:
 bash scripts/register-ars-colosseum.sh
 ```
 
-### 4. Create Demo Video
+### 5. Create Demo Video
 - Record 5-7 menit demo
 - Upload ke YouTube
 - Update link di script
-- Run script lagi
-
-### 5. Post di Forum
-- Share progress update
-- Link ke GitHub repo
-- Explain apa yang membuat ARS unik
+- Run script lagi untuk update project
 
 ### 6. Submit ke Judges (Hanya Ketika Siap!)
 
+**⚠️ PERHATIAN:** Submit adalah ONE-WAY ACTION - project akan LOCKED dan tidak bisa diedit lagi!
+
 ```bash
-curl -X POST https://api.colosseum.org/v1/my-project/submit \
+curl -X POST https://agents.colosseum.com/api/my-project/submit \
   -H "Authorization: Bearer $COLOSSEUM_API_KEY"
 ```
 
@@ -125,18 +154,21 @@ curl -X POST https://api.colosseum.org/v1/my-project/submit \
 
 ## 🔍 Troubleshooting
 
+### Error: "Agent name already taken"
+- Coba nama lain, misalnya: "ars-agent-2", "ars-protocol-agent"
+- Edit `AGENT_NAME` di `scripts/register-agent.sh`
+
+### Error: "Rate limit exceeded"
+- Tunggu beberapa menit
+- Rate limit: 5/min per IP, 50/day per IP
+
 ### Error: "COLOSSEUM_API_KEY not set"
-- Pastikan `.env` file ada
-- Pastikan ada baris `COLOSSEUM_API_KEY=...`
-- Pastikan tidak ada spasi sebelum/sesudah `=`
+- Pastikan sudah run `register-agent.sh` dulu
+- Pastikan `.env` file ada dan berisi `COLOSSEUM_API_KEY=...`
 
 ### Error: "Authorization failed"
 - Check API key masih valid
-- Login ke Colosseum dan generate key baru jika perlu
-
-### Error: "Project already exists"
-- Ini normal! Script akan update project yang ada
-- Tidak perlu khawatir
+- Pastikan tidak ada spasi atau karakter aneh di API key
 
 ---
 
@@ -146,28 +178,38 @@ curl -X POST https://api.colosseum.org/v1/my-project/submit \
 - **Full Documentation**: [COLOSSEUM_REGISTRATION.md](./COLOSSEUM_REGISTRATION.md)
 - **Project Overview**: [README.md](./README.md)
 - **Build Guide**: [QUICK_START.md](./QUICK_START.md)
+- **Official Skill**: https://colosseum.com/skill.md
+- **Heartbeat**: https://colosseum.com/heartbeat.md
 
 ---
 
 ## ✨ Summary
 
 **Yang Sudah Siap:**
-- ✅ Script registrasi (bash & PowerShell)
+- ✅ Script register agent (bash)
+- ✅ Script register project (bash & PowerShell)
 - ✅ Dokumentasi lengkap
 - ✅ Project details sudah di-configure
 - ✅ GitHub repo URL updated
 - ✅ All commits pushed
 
 **Yang Perlu Anda Lakukan:**
-1. Dapatkan API key dari Colosseum
-2. Tambahkan ke `.env`
-3. Run script registrasi
+1. Run `register-agent.sh` untuk mendapatkan API key
+2. Simpan API key ke `.env`
+3. Run `register-ars-colosseum.sh` untuk create project
 4. Verify di dashboard
 5. Build & deploy project
-6. Update demo links
-7. Submit ketika siap
+6. Post progress di forum
+7. Update demo links
+8. Submit ketika siap (ONE-WAY!)
 
 ---
 
 **Good luck with the hackathon! 🚀**
+
+**Timeline:**
+- Start: Feb 2, 2026 12:00 PM EST
+- End: Feb 12, 2026 12:00 PM EST
+- Duration: 10 days
+- Prize Pool: $100,000 USDC
 
