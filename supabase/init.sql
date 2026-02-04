@@ -1,4 +1,4 @@
--- Agentic Capital Bank - Database Initialization
+-- Agentic Reserve System (ARS) - Database Initialization
 -- This script sets up the database schema and Row Level Security
 
 -- Enable necessary extensions
