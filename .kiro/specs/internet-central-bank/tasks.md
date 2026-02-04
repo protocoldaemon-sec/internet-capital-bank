@@ -150,25 +150,25 @@ openclaw hooks create proposal-webhook --event blockchain --action notify
   - ✅ Market TVL and utilization rates
   - ✅ Multiply Vault integration
   - ✅ Weighted average rates calculation
-- [ ] 3.4 Integrate MagicBlock Ephemeral Rollups
-  -  scaffold ER client
-  - Add account delegation workflow
-  - Add session management
-  - Add state commitment logic
-  - Add Magic Router integration
-- [ ] 3.5 Integrate OpenRouter AI
-  -  generate OpenRouter client
-  - Add multi-model support
-  - Add cost tracking
-  - Add streaming responses
-- [ ] 3.6 Integrate x402-PayAI
-  -  scaffold x402 client
-  - Add USDC payment logic
-  - Add budget tracking
-  - Add retry logic
-- [ ] 3.7 Write unit tests for all protocol integrations
-  -  generate test suites
-  - Test each integration independently
+- [x] 3.4 Integrate MagicBlock Private Ephemeral Rollups
+  - ✅ Scaffold ER client
+  - ✅ Add account delegation workflow
+  - ✅ Add session management
+  - ✅ Add state commitment logic
+  - ✅ Add Magic Router integration
+- [x] 3.5 Integrate OpenRouter AI
+  - ✅ Generate OpenRouter client
+  - ✅ Add multi-model support
+  - ✅ Add cost tracking
+  - ✅ Add streaming responses
+- [x] 3.6 Integrate x402-PayAI
+  - ✅ Scaffold x402 client
+  - ✅ Add USDC payment logic
+  - ✅ Add budget tracking
+  - ✅ Add retry logic
+- [x] 3.7 Write unit tests for all protocol integrations
+  - ✅ Generate test suites
+  - ✅ Test each integration independently
 
 ### 4. ILI Calculator Service
 

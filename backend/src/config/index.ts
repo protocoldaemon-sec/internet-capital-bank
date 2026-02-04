@@ -34,6 +34,9 @@ export const config = {
     jupiterApiUrl: process.env.JUPITER_API_URL || 'https://quote-api.jup.ag/v6',
     meteoraApiUrl: process.env.METEORA_API_URL || 'https://dlmm-api.meteora.ag',
     kaminoApiUrl: process.env.KAMINO_API_URL || 'https://api.kamino.finance',
+    magicRouterUrl: process.env.MAGIC_ROUTER_URL || 'https://router.magicblock.gg',
+    openRouterApiKey: process.env.OPENROUTER_API_KEY || '',
+    openRouterReferer: process.env.OPENROUTER_REFERER || 'https://internet-capital-bank.com',
   },
   
   rateLimit: {
