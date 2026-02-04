@@ -170,55 +170,68 @@ openclaw hooks create proposal-webhook --event blockchain --action notify
   - ✅ Generate test suites
   - ✅ Test each integration independently
 
-### 4. ILI Calculator Service
+### 4. ILI Calculator Service ✅
 
-- [ ] 4.1 Implement ILI formula with yield, volatility, TVL components
-  -  generate calculation logic
-  - Add mathematical validation
-  - Include Meteora DLMM and Dynamic Vault data
-  - Include Kamino lending rates and TVL
-  - Include Jupiter swap volume
-- [ ] 4.2 Create ILI update scheduler (every 5 minutes)
-  -  cron: `*/5 * * * *`
-  - Set up automated execution
-  - Use Helius RPC for reliable data access
-- [ ] 4.3 Store ILI snapshots in Supabase
-  -  generate database queries
-  - Add transaction handling
-  - Enable real-time subscriptions for agents
-- [ ] 4.4 Cache current ILI in Redis
-  -  implement caching layer
-  - Set 5-minute TTL
-- [ ] 4.5 Write property-based test for ILI bounds
-  -  generate fast-check tests
-  - Validate positivity and bounds
+- [x] 4.1 Implement ILI formula with yield, volatility, TVL components
+  - ✅ Generate calculation logic
+  - ✅ Add mathematical validation
+  - ✅ Include Meteora DLMM and Dynamic Vault data
+  - ✅ Include Kamino lending rates and TVL
+  - ✅ Include Jupiter swap volume
+- [x] 4.2 Create ILI update scheduler (every 5 minutes)
+  - ✅ Cron: `*/5 * * * *`
+  - ✅ Set up automated execution
+  - ✅ Use Helius RPC for reliable data access
+- [x] 4.3 Store ILI snapshots in Supabase
+  - ✅ Generate database queries
+  - ✅ Add transaction handling
+  - ✅ Enable real-time subscriptions for agents
+- [x] 4.4 Cache current ILI in Redis
+  - ✅ Implement caching layer
+  - ✅ Set 5-minute TTL
+- [x] 4.5 Write property-based test for ILI bounds
+  - ✅ Generate fast-check tests (1000+ test cases)
+  - ✅ Validate positivity and finiteness
+  - ✅ Test monotonicity with respect to TVL
+  - ✅ Test yield and volatility relationships
 
 **Property Test 4.5**: Verify ILI is always positive and bounded
 - **Validates**: Requirements 1.5
 
-### 5. ICR Calculator Service
+**Files Created**:
+- `backend/src/services/ili-calculator.ts` (400+ lines)
+- `backend/src/tests/ili-icr-properties.test.ts` (300+ lines)
+- `backend/src/cron/index.ts` (50+ lines)
 
-- [ ] 5.1 Implement weighted average ICR from lending protocols
-  -  generate calculation logic
-  - Prioritize Kamino Finance (largest TVL)
-  - Include MarginFi, Solend, Port Finance
-  - Use Helius RPC for reliable data access
-- [ ] 5.2 Calculate confidence intervals
-  -  implement statistical logic
-  - Add outlier detection
-- [ ] 5.3 Create ICR update scheduler (every 10 minutes)
-  -  cron: `*/10 * * * *`
-  - Set up automated execution
-- [ ] 5.4 Store ICR history and cache current value
-  -  generate Supabase queries
-  - Set up Redis caching
-  - Enable real-time subscriptions
-- [ ] 5.5 Write property-based test for ICR bounds
-  -  generate fast-check tests
-  - Validate 0-100% range
+### 5. ICR Calculator Service ✅
+
+- [x] 5.1 Implement weighted average ICR from lending protocols
+  - ✅ Generate calculation logic
+  - ✅ Prioritize Kamino Finance (largest TVL)
+  - ✅ Include MarginFi, Solend, Port Finance (extensible)
+  - ✅ Use Helius RPC for reliable data access
+- [x] 5.2 Calculate confidence intervals
+  - ✅ Implement statistical logic
+  - ✅ Add outlier detection (>2σ from mean)
+- [x] 5.3 Create ICR update scheduler (every 10 minutes)
+  - ✅ Cron: `*/10 * * * *`
+  - ✅ Set up automated execution
+- [x] 5.4 Store ICR history and cache current value
+  - ✅ Generate Supabase queries
+  - ✅ Set up Redis caching (10min TTL)
+  - ✅ Enable real-time subscriptions
+- [x] 5.5 Write property-based test for ICR bounds
+  - ✅ Generate fast-check tests (1000+ test cases)
+  - ✅ Validate 0-100% range
+  - ✅ Test TVL weighting correctness
+  - ✅ Test extreme TVL differences
 
 **Property Test 5.5**: Verify ICR stays within 0-100% range
 - **Validates**: Requirements 4.1, 4.5
+
+**Files Created**:
+- `backend/src/services/icr-calculator.ts` (350+ lines)
+- Property tests included in `ili-icr-properties.test.ts`
 
 ---
 
