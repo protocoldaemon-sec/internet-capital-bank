@@ -3,6 +3,21 @@ use crate::state::*;
 use crate::errors::ReserveError;
 use crate::instructions::initialize_vault::VAULT_SEED;
 
+/// Reentrancy guard helper
+#[inline]
+fn acquire_lock(locked: &mut bool) -> Result<()> {
+    if *locked {
+        return err!(ReserveError::ReentrancyDetected);
+    }
+    *locked = true;
+    Ok(())
+}
+
+#[inline]
+fn release_lock(locked: &mut bool) {
+    *locked = false;
+}
+
 #[derive(Accounts)]
 pub struct Rebalance<'info> {
     #[account(
@@ -18,6 +33,10 @@ pub struct Rebalance<'info> {
 
 pub fn handler(ctx: Context<Rebalance>) -> Result<()> {
     let vault = &mut ctx.accounts.vault;
+    
+    // Acquire reentrancy lock
+    acquire_lock(&mut vault.locked)?;
+    
     let clock = Clock::get()?;
     
     vault.last_rebalance = clock.unix_timestamp;
@@ -31,6 +50,9 @@ pub fn handler(ctx: Context<Rebalance>) -> Result<()> {
     // 2. Compare with target weights
     // 3. Execute swaps via Jupiter
     // 4. Update vault composition
+    
+    // Release lock before returning
+    release_lock(&mut vault.locked);
     
     Ok(())
 }

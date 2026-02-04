@@ -57,7 +57,7 @@ pub fn handler(ctx: Context<ExecuteProposal>) -> Result<()> {
         
         // FIX #8: Safe percentage calculation with overflow protection
         require!(
-            proposal.yes_stake <= u128::MAX / 10000,
+            (proposal.yes_stake as u128) <= u128::MAX / 10000,
             ICBError::ArithmeticOverflow
         );
         

@@ -884,4 +884,319 @@ pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
 **Status**: Planned  
 **Priority**: Medium  
 **Timeline**: Q2 2026 (April - June)  
-**Assigned**: S
+**Assigned**: Spute units
+- Zero false rejections of valid data
+
+s
+   }
+   ```
+
+2. Integration tests with real oracles
+3. Stress testing with malicious data
+
+**Phase 5: Deployment (Week 10-12)**
+
+1. Deploy oracle registry
+2. Whitelist Pyth, Switchboard, Birdeye
+3. Update backend to use new format
+4. Deploy to devnet
+5. Monitor for issues
+6. Deploy to testnet
+7. Mainnet deployment
+
+#### Success Criteria
+
+- All ILI updates validated on-chain
+- Malicious data rejected
+- 3+ oracle sources required
+- Median calculation verified
+- Data freshness enforced
+- Gas costs < 15,000 com
+               birdeyeData
+           ])
+       };
+   }
+   ```
+
+**Phase 4: Testing (Week 8-9)**
+
+1. Test validation rules
+   ```rust
+   #[test]
+   fn test_ili_bounds_validation() {
+       // Test MIN_ILI boundary
+       // Test MAX_ILI boundary
+   }
+   
+   #[test]
+   fn test_change_limit_validation() {
+       // Test 50% change limit
+   }
+   
+   #[test]
+   fn test_insufficient_sources() {
+       // Test with < 3 sources
+   }
+   
+   #[test]
+   fn test_stale_data_rejection() {
+       // Test with old timestampData([pythData, switchboardData, birdeyeData]);
+       
+       // Calculate median
+       const median = this.calculateMedian([
+           pythData.value,
+           switchboardData.value,
+           birdeyeData.value
+       ]);
+       
+       // Prepare on-chain update with proof
+       return {
+           ili_value: median,
+           sources: [pythData, switchboardData, birdeyeData],
+           calculation_proof: this.generateCalculationProof(median, [
+               pythData,
+               switchboardData,y.last_update = Clock::get()?.unix_timestamp;
+       
+       Ok(())
+   }
+   ```
+
+**Phase 3: Update Backend (Week 6-7)**
+
+1. Modify oracle aggregator to provide proof
+   ```typescript
+   async prepareILIUpdate(): Promise<ILIUpdate> {
+       // Fetch from multiple sources
+       const pythData = await this.fetchPythData();
+       const switchboardData = await this.fetchSwitchboardData();
+       const birdeyeData = await this.fetchBirdeyeData();
+       
+       // Validate off-chain first
+       this.validateOracle       pub oracle_weights: Vec<u64>,
+       pub last_update: i64,
+   }
+   
+   pub fn add_oracle(
+       ctx: Context<AddOracle>,
+       oracle_pubkey: Pubkey,
+       weight: u64,
+   ) -> Result<()> {
+       let registry = &mut ctx.accounts.oracle_registry;
+       
+       require!(
+           ctx.accounts.authority.key() == registry.authority,
+           ErrorCode::Unauthorized
+       );
+       
+       registry.whitelisted_oracles.push(oracle_pubkey);
+       registry.oracle_weights.push(weight);
+       registrrces: &[OracleData]) -> Result<u64> {
+       let mut values: Vec<u64> = sources.iter().map(|s| s.value).collect();
+       values.sort();
+       
+       let len = values.len();
+       let median = if len % 2 == 0 {
+           (values[len / 2 - 1] + values[len / 2]) / 2
+       } else {
+           values[len / 2]
+       };
+       
+       Ok(median)
+   }
+   ```
+
+4. Add oracle registry
+   ```rust
+   #[account]
+   pub struct OracleRegistry {
+       pub authority: Pubkey,
+       pub whitelisted_oracles: Vec<Pubkey>,
+ // Verify oracle signature
+       verify_oracle_signature(source)?;
+       
+       // Verify confidence level
+       require!(
+           source.confidence >= MIN_CONFIDENCE,
+           ErrorCode::LowConfidence
+       );
+       
+       // Verify value is reasonable
+       require!(
+           source.value > 0 && source.value < MAX_ORACLE_VALUE,
+           ErrorCode::InvalidOracleValue
+       );
+       
+       Ok(())
+   }
+   ```
+
+3. Implement median calculation verification
+   ```rust
+   fn calculate_median(sou  sources: ili_update.sources.len() as u8,
+           timestamp: current_time,
+       });
+       
+       Ok(())
+   }
+   ```
+
+2. Implement oracle source verification
+   ```rust
+   fn verify_oracle_source(
+       source: &OracleData,
+       accounts: &UpdateILI,
+   ) -> Result<()> {
+       // Verify oracle is whitelisted
+       let oracle_registry = &accounts.oracle_registry;
+       require!(
+           oracle_registry.is_whitelisted(&source.source),
+           ErrorCode::UnauthorizedOracle
+       );
+       
+      leOracleData
+           );
+       }
+       
+       // Update state
+       global_state.ili = ili_update.ili_value;
+       global_state.last_update = current_time;
+       global_state.update_count += 1;
+       
+       // Store oracle sources for verification
+       global_state.last_oracle_sources = ili_update.sources
+           .iter()
+           .map(|s| s.source)
+           .collect();
+       
+       emit!(ILIUpdateEvent {
+           old_ili: global_state.ili,
+           new_ili: ili_update.ili_value,
+         _oracle_source(source, &ctx.accounts)?;
+       }
+       
+       // Validation 6: Verify median calculation
+       let calculated_median = calculate_median(&ili_update.sources)?;
+       require!(
+           calculated_median == ili_update.ili_value,
+           ErrorCode::InvalidILICalculation
+       );
+       
+       // Validation 7: Check data freshness
+       for source in &ili_update.sources {
+           require!(
+               current_time - source.timestamp < 600, // 10 minutes
+               ErrorCode::Statage(
+               global_state.ili,
+               ili_update.ili_value
+           )?;
+           require!(
+               change_pct <= MAX_CHANGE_PCT,
+               ErrorCode::ILIChangeTooLarge
+           );
+       }
+       
+       // Validation 4: Verify multi-source data
+       require!(
+           ili_update.sources.len() >= 3,
+           ErrorCode::InsufficientOracleSources
+       );
+       
+       // Validation 5: Verify each oracle source
+       for source in &ili_update.sources {
+           verify/ Validation 1: Check update frequency
+       require!(
+           current_time - global_state.last_update >= MIN_UPDATE_INTERVAL,
+           ErrorCode::UpdateTooFrequent
+       );
+       
+       // Validation 2: Check ILI bounds
+       require!(
+           ili_update.ili_value >= MIN_ILI && ili_update.ili_value <= MAX_ILI,
+           ErrorCode::ILIOutOfBounds
+       );
+       
+       // Validation 3: Check change magnitude
+       if global_state.ili > 0 {
+           let change_pct = calculate_change_percene {
+       pub ili_value: u64,
+       pub sources: Vec<OracleData>, // Must have 3+ sources
+       pub calculation_proof: Vec<u8>, // Proof of calculation
+   }
+   ```
+
+**Phase 2: Implement On-Chain Validation (Week 3-5)**
+
+1. Add validation to update_ili instruction
+   ```rust
+   pub fn update_ili(
+       ctx: Context<UpdateILI>,
+       ili_update: ILIUpdate,
+   ) -> Result<()> {
+       let global_state = &mut ctx.accounts.global_state;
+       let current_time = Clock::get()?.unix_timestamp;
+       
+       /240; // 4 minutes minimum
+   ```
+
+2. Design multi-source verification
+   ```rust
+   #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+   pub struct OracleData {
+       pub source: Pubkey,      // Oracle program ID
+       pub value: u64,          // Price/rate value
+       pub confidence: u64,     // Confidence interval
+       pub timestamp: i64,      // Data timestamp
+       pub signature: [u8; 64], // Oracle signature
+   }
+   
+   #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+   pub struct ILIUpdatMax 50% change per update
+   const MIN_UPDATE_INTERVAL: i64 = ast_update = Clock::get()?.unix_timestamp;
+    Ok(())
+}
+```
+
+**Risk Assessment**:
+- **Severity**: Medium
+- **Exploitability**: Low (requires compromised backend)
+- **Impact**: Incorrect ILI could affect agent decisions
+- **CVSS Score**: 5.5 (Medium)
+
+#### Implementation Plan
+
+**Phase 1: Design On-Chain Validation (Week 1-2)**
+
+1. Define validation rules
+   ```rust
+   const MIN_ILI: u64 = 100;        // Minimum valid ILI
+   const MAX_ILI: u64 = 10_000;     // Maximum valid ILI
+   const MAX_CHANGE_PCT: u64 = 50;  // );
+  const outliers = this.detectOutliers([pythPrice, switchboardPrice, birdeyePrice]);
+  
+  // Submit to on-chain without validation
+  await this.submitILI(median);
+}
+```
+
+```rust
+// On-chain: No validation
+pub fn update_ili(ctx: Context<UpdateILI>, ili_value: u64) -> Result<()> {
+    // ISSUE: Accepts any value without validation
+    let global_state = &mut ctx.accounts.global_state;
+    global_state.ili = ili_value;
+    global_state.ledian([pythPrice, switchboardPrice, birdeyePrice]mart Contract + Backend Team
+
+#### Current State
+
+**Location**: `backend/src/services/oracle-aggregator.ts`, `programs/ars-core/src/instructions/update_ili.rs`
+
+**Current Implementation**:
+```typescript
+// Off-chain validation only
+async aggregateOracleData() {
+  const pythPrice = await this.pythClient.getPrice();
+  const switchboardPrice = await this.switchboardClient.getPrice();
+  const birdeyePrice = await this.birdeyeClient.getPrice();
+  
+  // Validation happens off-chain
+  const median = this.calculateM

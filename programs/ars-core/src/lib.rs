@@ -6,6 +6,8 @@ pub mod state;
 pub mod instructions;
 pub mod errors;
 pub mod constants;
+pub mod utils;
+pub mod math;
 
 use instructions::*;
 use state::*;
@@ -13,7 +15,7 @@ use errors::ICBError;
 
 // ARS-SA-2026-001: Secure Agent Verification
 // This module prevents policy manipulation by illegal agents
-use solana_program::ed25519_program;
+use anchor_lang::solana_program::ed25519_program;
 use anchor_lang::solana_program::sysvar::instructions as sysvar_instructions;
 
 /// Validates that the agent is properly authenticated via Ed25519 signature
@@ -35,7 +37,7 @@ pub fn validate_agent_auth(
     expected_agent: &Pubkey,
 ) -> Result<()> {
     // Load the instructions sysvar
-    let data = instructions_sysvar.try_borrow_data()?;
+    let _data = instructions_sysvar.try_borrow_data()?;
     let current_index = sysvar_instructions::load_current_index_checked(instructions_sysvar)?;
     
     // Ensure there is a previous instruction

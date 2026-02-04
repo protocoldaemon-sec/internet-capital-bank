@@ -1,7 +1,8 @@
 use anchor_lang::prelude::*;
 use crate::state::*;
-use crate::constants::*;
 use crate::errors::ICBError;
+use crate::math::calculate_voting_power;
+use crate::constants::*;
 
 #[derive(Accounts)]
 pub struct VoteOnProposal<'info> {
@@ -14,12 +15,11 @@ pub struct VoteOnProposal<'info> {
     pub proposal: Account<'info, PolicyProposal>,
     
     #[account(
-        init_if_needed, // FIX #5: Allow checking if already voted
+        init_if_needed,
         payer = agent,
         space = VoteRecord::LEN,
         seeds = [VOTE_SEED, proposal.key().as_ref(), agent.key().as_ref()],
-        bump,
-        constraint = !vote_record.claimed @ ICBError::AlreadyVoted // FIX #5: Prevent duplicate voting
+        bump
     )]
     pub vote_record: Account<'info, VoteRecord>,
     
@@ -51,16 +51,20 @@ pub fn handler(
     let vote_record = &mut ctx.accounts.vote_record;
     let clock = Clock::get()?;
     
+    // Check if already voted (FIX #5: Prevent duplicate voting)
+    require!(!vote_record.claimed, ICBError::AlreadyVoted);
+    
     // Check if voting period is still active
     require!(
         clock.unix_timestamp < proposal.end_time,
         ICBError::ProposalNotActive
     );
     
-    // Update proposal stakes with quadratic staking
+    // Update proposal stakes with quadratic staking using fixed-point arithmetic
     // Quadratic staking formula: voting_power = sqrt(stake_amount)
     // This prevents whale dominance and encourages broader participation
-    let voting_power = (stake_amount as f64).sqrt() as u64;
+    // FIX #2: Use fixed-point sqrt instead of f64 for deterministic computation
+    let voting_power = calculate_voting_power(stake_amount)?;
     
     if prediction {
         proposal.yes_stake = proposal.yes_stake
@@ -78,7 +82,7 @@ pub fn handler(
     vote_record.stake_amount = stake_amount;
     vote_record.prediction = prediction;
     vote_record.timestamp = clock.unix_timestamp;
-    vote_record.claimed = false;
+    vote_record.claimed = true; // Mark as voted
     vote_record.agent_signature = agent_signature; // FIX #2: Store verified signature
     vote_record.bump = ctx.bumps.vote_record;
     
@@ -86,6 +90,7 @@ pub fn handler(
     msg!("Agent: {}", ctx.accounts.agent.key());
     msg!("Prediction: {}", if prediction { "YES" } else { "NO" });
     msg!("Stake: {}", stake_amount);
+    msg!("Voting power: {}", voting_power);
     msg!("Total YES stake: {}", proposal.yes_stake);
     msg!("Total NO stake: {}", proposal.no_stake);
     

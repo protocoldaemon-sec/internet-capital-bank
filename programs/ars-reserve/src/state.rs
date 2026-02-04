@@ -12,6 +12,7 @@ pub struct ReserveVault {
     pub vhr: u16,                   // Basis points (15000 = 150%)
     pub last_rebalance: i64,
     pub rebalance_threshold_bps: u16, // 1500 = 15%
+    pub locked: bool,               // Reentrancy guard
     pub bump: u8,
 }
 
@@ -26,6 +27,7 @@ impl ReserveVault {
         2 +  // vhr
         8 +  // last_rebalance
         2 +  // rebalance_threshold_bps
+        1 +  // locked
         1;   // bump
 }
 

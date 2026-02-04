@@ -31,8 +31,8 @@ pub fn request_circuit_breaker(ctx: Context<RequestCircuitBreaker>) -> Result<()
     let clock = Clock::get()?;
     
     // Check if VHR is below threshold (if reserve vault provided)
-    let mut vhr_triggered = false;
-    if let Some(reserve_vault_info) = &ctx.accounts.reserve_vault {
+    let vhr_triggered = false;
+    if let Some(_reserve_vault_info) = &ctx.accounts.reserve_vault {
         // Deserialize reserve vault to check VHR
         // Note: This requires the reserve vault account to be passed in
         // For now, we'll just log that VHR check was requested
@@ -42,8 +42,8 @@ pub fn request_circuit_breaker(ctx: Context<RequestCircuitBreaker>) -> Result<()
     }
     
     // Check if oracle health is degraded (if ILI oracle provided)
-    let mut oracle_health_triggered = false;
-    if let Some(ili_oracle_info) = &ctx.accounts.ili_oracle {
+    let oracle_health_triggered = false;
+    if let Some(_ili_oracle_info) = &ctx.accounts.ili_oracle {
         msg!("Oracle health check requested - ILI oracle provided");
         // TODO: Check oracle last_update timestamp
         // If last_update > 15 minutes ago, set oracle_health_triggered = true

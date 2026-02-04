@@ -22,4 +22,7 @@ pub enum ReserveError {
     
     #[msg("Arithmetic underflow")]
     ArithmeticUnderflow,
+    
+    #[msg("Reentrancy detected")]
+    ReentrancyDetected,
 }

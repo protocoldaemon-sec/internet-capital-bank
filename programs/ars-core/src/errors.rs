@@ -105,4 +105,20 @@ pub enum ICBError {
     
     #[msg("Agent public key mismatch")]
     AgentMismatch,
+    
+    // High Priority Security Fixes
+    #[msg("Invalid nonce")]
+    InvalidNonce,
+    
+    #[msg("Math overflow")]
+    MathOverflow,
+    
+    #[msg("Math underflow")]
+    MathUnderflow,
+    
+    #[msg("Reentrancy detected")]
+    ReentrancyDetected,
+    
+    #[msg("Signature expired")]
+    SignatureExpired,
 }

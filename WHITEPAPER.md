@@ -2458,10 +2458,10 @@ The future is autonomous. The future is agent-native. The future is ARS.
 **Last Updated**: February 5, 2026
 
 **Contact Information**:
-- Website: https://agentic-reserve-system.com
-- Email: team@ars.finance
-- Twitter: @AgenticReserve
-- Discord: https://discord.gg/ars
+- Website: https://ars.daemonprotocol.com
+- Email: admin@daemonprotocol
+- Twitter: [@Agenticreserve](https://x.com/Agenticreserve)
+- GitHub: [daemonprotocol/ars](https://github.com/protocoldaemon-sec/agentic-reserve-system.git)
 
 **Legal Disclaimer**: This whitepaper is for informational purposes only and does not constitute investment advice, financial advice, trading advice, or any other sort of advice. ARS tokens (ARU) may be subject to regulatory requirements in various jurisdictions. Potential users should consult with legal and financial advisors before participating in the ARS protocol.
 

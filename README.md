@@ -100,7 +100,7 @@ Total: approximately 3,200 lines of production Rust code
 - Red Team Agent (HexStrike AI): Offensive security testing and vulnerability discovery
 - Blue Team Agent: Defensive security and incident response
 - Blockchain Security Agent: On-chain security and MEV protection
-- AML/CFT Compliance Agent: Regulatory compliance with Phalcon risk engine integration
+- AML/CFT Compliance Agent: Regulatory compliance with risk engine integration
 
 **AML/CFT Compliance Features**
 - Behavior Risk Engine: Large transfer, high-frequency, and transit address detection

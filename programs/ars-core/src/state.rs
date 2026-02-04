@@ -103,7 +103,7 @@ impl PolicyProposal {
 }
 
 /// Policy type enum
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Debug)]
 pub enum PolicyType {
     MintICU,
     BurnICU,
@@ -180,4 +180,25 @@ pub enum AgentType {
     PredictionAgent,
     ArbitrageAgent,
     TreasuryAgent,
+}
+
+/// Agent state for nonce tracking (prevents replay attacks)
+/// 
+/// Security Advisory: ARS-SA-2026-001 (High Priority Issue #1)
+/// Each agent maintains a monotonically increasing nonce to prevent
+/// signature replay attacks across different proposals or transactions.
+#[account]
+pub struct AgentState {
+    pub agent_pubkey: Pubkey,
+    pub nonce: u64,                 // Monotonically increasing nonce
+    pub last_action_timestamp: i64, // Timestamp of last action
+    pub bump: u8,
+}
+
+impl AgentState {
+    pub const LEN: usize = 8 + // discriminator
+        32 + // agent_pubkey
+        8 +  // nonce
+        8 +  // last_action_timestamp
+        1;   // bump
 }
