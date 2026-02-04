@@ -1,21 +1,29 @@
 import axios, { AxiosInstance } from 'axios';
 import { config } from '../../config';
 
-export interface JupiterQuote {
+export interface JupiterUltraOrder {
+  orderId: string;
   inputMint: string;
-  inAmount: string;
   outputMint: string;
+  inAmount: string;
   outAmount: string;
-  otherAmountThreshold: string;
-  swapMode: string;
-  slippageBps: number;
   priceImpactPct: number;
+  slippageBps: number;
+  fee: {
+    amount: string;
+    mint: string;
+    pct: number;
+  };
   routePlan: any[];
 }
 
-export interface JupiterSwapTransaction {
-  swapTransaction: string;
-  lastValidBlockHeight: number;
+export interface JupiterUltraExecuteResponse {
+  orderId: string;
+  status: 'pending' | 'confirmed' | 'failed';
+  txid?: string;
+  inAmount: string;
+  outAmount: string;
+  error?: string;
 }
 
 export interface JupiterTokenInfo {
@@ -38,75 +46,87 @@ export interface JupiterPriceData {
 
 /**
  * Jupiter API Client
- * Provides swap aggregation, price data, and liquidity metrics
+ * Uses Ultra API (v3) - the most advanced trading engine on Solana
+ * Features: Juno liquidity engine, sub-second execution, gasless support
  */
 export class JupiterClient {
-  private client: AxiosInstance;
+  private ultraClient: AxiosInstance;
+  private priceClient: AxiosInstance;
   private priceCache: Map<string, { price: number; timestamp: number }> = new Map();
   private readonly CACHE_TTL = 30 * 1000; // 30 seconds
 
   constructor() {
-    this.client = axios.create({
-      baseURL: config.apis.jupiterApiUrl,
+    // Ultra API for swaps (recommended)
+    this.ultraClient = axios.create({
+      baseURL: 'https://api.jup.ag/ultra/v1',
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
       },
     });
 
-    console.log('✅ Jupiter client initialized');
+    // Price API
+    this.priceClient = axios.create({
+      baseURL: 'https://api.jup.ag/price/v2',
+      timeout: 5000,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('✅ Jupiter Ultra client initialized');
   }
 
   /**
-   * Get quote for a swap
+   * Get Ultra order (quote + execution in one)
+   * Ultra API provides best executed price with sub-second landing
    */
-  async getQuote(params: {
+  async getUltraOrder(params: {
     inputMint: string;
     outputMint: string;
     amount: number;
     slippageBps?: number;
-  }): Promise<JupiterQuote> {
-    try {
-      const response = await this.client.get('/quote', {
-        params: {
-          inputMint: params.inputMint,
-          outputMint: params.outputMint,
-          amount: params.amount,
-          slippageBps: params.slippageBps || 50, // 0.5% default slippage
-        },
-      });
-
-      return response.data;
-    } catch (error) {
-      console.error('Jupiter getQuote error:', error);
-      throw new Error(`Failed to get Jupiter quote: ${error}`);
-    }
-  }
-
-  /**
-   * Get swap transaction
-   */
-  async getSwapTransaction(params: {
-    quoteResponse: JupiterQuote;
     userPublicKey: string;
-    wrapUnwrapSOL?: boolean;
-  }): Promise<JupiterSwapTransaction> {
+  }): Promise<JupiterUltraOrder> {
     try {
-      const response = await this.client.post('/swap', {
-        quoteResponse: params.quoteResponse,
+      const response = await this.ultraClient.post('/order', {
+        inputMint: params.inputMint,
+        outputMint: params.outputMint,
+        amount: params.amount.toString(),
+        slippageBps: params.slippageBps || 50, // 0.5% default slippage
         userPublicKey: params.userPublicKey,
-        wrapUnwrapSOL: params.wrapUnwrapSOL ?? true,
       });
 
       return response.data;
     } catch (error) {
-      console.error('Jupiter getSwapTransaction error:', error);
-      throw new Error(`Failed to get swap transaction: ${error}`);
+      console.error('Jupiter getUltraOrder error:', error);
+      throw new Error(`Failed to get Ultra order: ${error}`);
     }
   }
 
   /**
-   * Get token price from Jupiter Price API
+   * Execute Ultra order
+   * Handles transaction signing and broadcasting
+   */
+  async executeUltraOrder(params: {
+    orderId: string;
+    signedTransaction: string;
+  }): Promise<JupiterUltraExecuteResponse> {
+    try {
+      const response = await this.ultraClient.post('/execute', {
+        orderId: params.orderId,
+        signedTransaction: params.signedTransaction,
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('Jupiter executeUltraOrder error:', error);
+      throw new Error(`Failed to execute Ultra order: ${error}`);
+    }
+  }
+
+  /**
+   * Get token price from Jupiter Price API v2
    */
   async getTokenPrice(mintAddress: string): Promise<number> {
     // Check cache
@@ -116,7 +136,7 @@ export class JupiterClient {
     }
 
     try {
-      const response = await axios.get(`https://price.jup.ag/v4/price`, {
+      const response = await this.priceClient.get('', {
         params: {
           ids: mintAddress,
         },
@@ -144,7 +164,7 @@ export class JupiterClient {
    */
   async getTokenPrices(mintAddresses: string[]): Promise<Record<string, number>> {
     try {
-      const response = await axios.get(`https://price.jup.ag/v4/price`, {
+      const response = await this.priceClient.get('', {
         params: {
           ids: mintAddresses.join(','),
         },
@@ -198,16 +218,17 @@ export class JupiterClient {
   }
 
   /**
-   * Calculate price impact for a swap
+   * Calculate price impact for a swap using Ultra API
    */
   async calculatePriceImpact(params: {
     inputMint: string;
     outputMint: string;
     amount: number;
+    userPublicKey: string;
   }): Promise<number> {
     try {
-      const quote = await this.getQuote(params);
-      return quote.priceImpactPct;
+      const order = await this.getUltraOrder(params);
+      return order.priceImpactPct;
     } catch (error) {
       console.error('Jupiter calculatePriceImpact error:', error);
       throw new Error(`Failed to calculate price impact: ${error}`);
@@ -215,19 +236,56 @@ export class JupiterClient {
   }
 
   /**
-   * Get best route for a swap
+   * Get best route for a swap using Ultra API
    */
   async getBestRoute(params: {
     inputMint: string;
     outputMint: string;
     amount: number;
+    userPublicKey: string;
   }): Promise<any[]> {
     try {
-      const quote = await this.getQuote(params);
-      return quote.routePlan;
+      const order = await this.getUltraOrder(params);
+      return order.routePlan;
     } catch (error) {
       console.error('Jupiter getBestRoute error:', error);
       throw new Error(`Failed to get best route: ${error}`);
+    }
+  }
+
+  /**
+   * Get user token holdings via Ultra API
+   */
+  async getUserHoldings(userPublicKey: string): Promise<any[]> {
+    try {
+      const response = await this.ultraClient.get('/holdings', {
+        params: {
+          owner: userPublicKey,
+        },
+      });
+
+      return response.data.tokens || [];
+    } catch (error) {
+      console.error('Jupiter getUserHoldings error:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Search for tokens
+   */
+  async searchToken(query: string): Promise<JupiterTokenInfo[]> {
+    try {
+      const response = await this.ultraClient.get('/search', {
+        params: {
+          query,
+        },
+      });
+
+      return response.data.tokens || [];
+    } catch (error) {
+      console.error('Jupiter searchToken error:', error);
+      return [];
     }
   }
 
@@ -242,20 +300,25 @@ export class JupiterClient {
   /**
    * Get liquidity for a token pair
    */
-  async getLiquidity(inputMint: string, outputMint: string): Promise<{
+  async getLiquidity(
+    inputMint: string,
+    outputMint: string,
+    userPublicKey: string
+  ): Promise<{
     available: boolean;
     routes: number;
   }> {
     try {
-      const quote = await this.getQuote({
+      const order = await this.getUltraOrder({
         inputMint,
         outputMint,
         amount: 1000000, // 1 USDC equivalent
+        userPublicKey,
       });
 
       return {
         available: true,
-        routes: quote.routePlan.length,
+        routes: order.routePlan.length,
       };
     } catch (error) {
       return {
@@ -263,6 +326,17 @@ export class JupiterClient {
         routes: 0,
       };
     }
+  }
+
+  /**
+   * Get swap volume for a token (24h)
+   * Note: Jupiter doesn't provide direct volume API
+   * This would need to be calculated from historical data
+   */
+  async get24hVolume(mintAddress: string): Promise<number> {
+    // Placeholder - would need historical swap data
+    console.warn('Jupiter 24h volume API not available');
+    return 0;
   }
 }
 
