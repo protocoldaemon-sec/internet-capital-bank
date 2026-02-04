@@ -31,6 +31,11 @@ pub mod icb_core {
         )
     }
 
+    /// Set reserve vault after initialization (FIX #10)
+    pub fn set_reserve_vault(ctx: Context<SetReserveVault>) -> Result<()> {
+        instructions::initialize::set_reserve_vault(ctx)
+    }
+
     /// Update the ILI oracle value
     pub fn update_ili(
         ctx: Context<UpdateILI>,
@@ -57,22 +62,33 @@ pub mod icb_core {
         instructions::create_proposal::handler(ctx, policy_type, policy_params, duration)
     }
 
-    /// Vote on a policy proposal
+    /// Vote on a policy proposal (FIX #2, #5)
     pub fn vote_on_proposal(
         ctx: Context<VoteOnProposal>,
         prediction: bool,
         stake_amount: u64,
+        agent_signature: [u8; 64],
     ) -> Result<()> {
-        instructions::vote_on_proposal::handler(ctx, prediction, stake_amount)
+        instructions::vote_on_proposal::handler(ctx, prediction, stake_amount, agent_signature)
     }
 
-    /// Execute an approved proposal
+    /// Execute an approved proposal (FIX #3, #8)
     pub fn execute_proposal(ctx: Context<ExecuteProposal>) -> Result<()> {
         instructions::execute_proposal::handler(ctx)
     }
 
-    /// Activate circuit breaker
+    /// Request circuit breaker activation (FIX #7)
+    pub fn request_circuit_breaker(ctx: Context<RequestCircuitBreaker>) -> Result<()> {
+        instructions::circuit_breaker::request_circuit_breaker(ctx)
+    }
+
+    /// Activate circuit breaker after timelock (FIX #7)
     pub fn activate_circuit_breaker(ctx: Context<ActivateCircuitBreaker>) -> Result<()> {
-        instructions::circuit_breaker::handler(ctx)
+        instructions::circuit_breaker::activate_circuit_breaker(ctx)
+    }
+
+    /// Deactivate circuit breaker (FIX #7)
+    pub fn deactivate_circuit_breaker(ctx: Context<DeactivateCircuitBreaker>) -> Result<()> {
+        instructions::circuit_breaker::deactivate_circuit_breaker(ctx)
     }
 }

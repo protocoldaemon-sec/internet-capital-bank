@@ -32,19 +32,37 @@ pub fn handler(
     let ili_oracle = &mut ctx.accounts.ili_oracle;
     let clock = Clock::get()?;
     
-    // Check if enough time has passed since last update
-    let time_since_update = clock.unix_timestamp - ili_oracle.last_update;
+    // FIX #9: Combine timestamp AND slot checks for clock manipulation protection
+    let time_delta = clock.unix_timestamp - ili_oracle.last_update;
+    let slot_delta = clock.slot - ili_oracle.last_update_slot;
+    
     require!(
-        time_since_update >= ili_oracle.update_interval,
+        time_delta >= ili_oracle.update_interval && slot_delta >= MIN_SLOT_BUFFER,
         ICBError::ILIUpdateTooSoon
     );
     
-    // Validate ILI value (should be positive)
-    require!(ili_value > 0, ICBError::InvalidILIValue);
+    // FIX #6: Validate all oracle inputs
+    require!(
+        ili_value > 0 && ili_value <= MAX_ILI_VALUE,
+        ICBError::InvalidILIValue
+    );
+    require!(
+        avg_yield <= MAX_YIELD_BPS,
+        ICBError::InvalidYield
+    );
+    require!(
+        volatility <= MAX_VOLATILITY_BPS,
+        ICBError::InvalidVolatility
+    );
+    require!(
+        tvl > 0,
+        ICBError::InvalidTVL
+    );
     
     // Update ILI oracle
     ili_oracle.current_ili = ili_value;
     ili_oracle.last_update = clock.unix_timestamp;
+    ili_oracle.last_update_slot = clock.slot; // FIX #9: Update slot
     ili_oracle.snapshot_count = ili_oracle.snapshot_count.saturating_add(1);
     
     msg!("ILI updated to: {}", ili_value);
@@ -52,6 +70,7 @@ pub fn handler(
     msg!("Volatility: {} bps", volatility);
     msg!("TVL: ${}", tvl);
     msg!("Timestamp: {}", clock.unix_timestamp);
+    msg!("Slot: {}", clock.slot);
     
     Ok(())
 }
