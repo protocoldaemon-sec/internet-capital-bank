@@ -92,7 +92,7 @@ export class WebSocketService {
           schema: 'public',
           table: 'ili_history',
         },
-        (payload) => {
+        (payload: any) => {
           this.broadcast('ili', {
             type: 'ili_update',
             data: {
@@ -119,7 +119,7 @@ export class WebSocketService {
           schema: 'public',
           table: 'proposals',
         },
-        (payload) => {
+        (payload: any) => {
           this.broadcast('proposals', {
             type: 'proposal_update',
             data: {
@@ -143,7 +143,7 @@ export class WebSocketService {
           schema: 'public',
           table: 'reserve_events',
         },
-        (payload) => {
+        (payload: any) => {
           this.broadcast('reserve', {
             type: 'reserve_update',
             data: {
@@ -166,7 +166,7 @@ export class WebSocketService {
           schema: 'public',
           table: 'revenue_events',
         },
-        (payload) => {
+        (payload: any) => {
           this.broadcast('revenue', {
             type: 'revenue_update',
             data: {
