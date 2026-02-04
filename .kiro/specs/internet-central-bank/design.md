@@ -18,62 +18,102 @@ The Internet Central Bank is an **Agent-First DeFi Protocol** that coordinates l
 ### High-Level Overview
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│              ICB Agent-First Architecture                    │
-├─────────────────────────────────────────────────────────────┤
-│                                                               │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │           OpenClaw Agent Ecosystem                    │   │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐          │   │
-│  │  │ Lending  │  │  Yield   │  │Liquidity │          │   │
-│  │  │  Agent   │  │  Agent   │  │  Agent   │          │   │
-│  │  └────┬─────┘  └────┬─────┘  └────┬─────┘          │   │
-│  │       │             │             │                  │   │
-│  │       └─────────────┼─────────────┘                  │   │
-│  │                     │                                 │   │
-│  │              ┌──────▼──────┐                         │   │
-│  │              │ ICB Agent   │                         │   │
-│  │              │    SDK      │                         │   │
-│  │              └──────┬──────┘                         │   │
-│  └─────────────────────┼────────────────────────────────┘   │
-│                        │                                     │
-│         ┌──────────────┼──────────────┐                     │
-│         │              │              │                     │
-│         ▼              ▼              ▼                     │
-│  ┌──────────┐   ┌──────────┐   ┌──────────┐              │
-│  │ JSON-RPC │   │WebSocket │   │  Solana  │              │
-│  │   API    │   │  Events  │   │   RPC    │              │
-│  └────┬─────┘   └────┬─────┘   └────┬─────┘              │
-│       │              │              │                     │
-│       └──────────────┼──────────────┘                     │
-│                      │                                     │
-│              ┌───────▼────────┐                           │
-│              │   Backend      │                           │
-│              │   Services     │                           │
-│              │ (Node.js/TS)   │                           │
-│              └───────┬────────┘                           │
-│                      │                                     │
-│         ┌────────────┼────────────┐                       │
-│         │            │            │                       │
-│         ▼            ▼            ▼                       │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐                 │
-│  │PostgreSQL│ │  Redis   │ │  Solana  │                 │
-│  │          │ │  Cache   │ │ Programs │                 │
-│  └──────────┘ └──────────┘ └──────────┘                 │
-│                                                            │
-│  ┌────────────────────────────────────────────────────┐  │
-│  │         External Data Sources (Agent-Readable)      │  │
-│  │  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐ │  │
-│  │  │ Pyth │  │Switch│  │Birdeye│  │Jupiter│  │Meteora││  │
-│  │  │Oracle│  │board │  │  API  │  │  API  │  │  API  ││  │
-│  │  └──────┘  └──────┘  └──────┘  └──────┘  └──────┘ │  │
-│  └────────────────────────────────────────────────────┘  │
-│                                                            │
-│  ┌────────────────────────────────────────────────────┐  │
-│  │    Optional: Human Observer Dashboard (Read-Only)  │  │
-│  │              Vite + React + Tailwind                │  │
-│  └────────────────────────────────────────────────────┘  │
-└────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    ICB Agent-First Architecture                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                           │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │              Agent Swarm Ecosystem (OpenClaw)                     │   │
+│  │                                                                    │   │
+│  │  ┌────────────────────────────────────────────────────────────┐  │   │
+│  │  │                  Master Orchestrator                        │  │   │
+│  │  │  • Workflow coordination • Consensus • Message routing      │  │   │
+│  │  └────────────────────────┬───────────────────────────────────┘  │   │
+│  │                           │                                       │   │
+│  │  ┌────────────────────────┼───────────────────────────────────┐  │   │
+│  │  │         Specialized Agent Swarm (10 Agents)                │  │   │
+│  │  │                                                             │  │   │
+│  │  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  │  │   │
+│  │  │  │ Policy   │  │ Oracle   │  │  DeFi    │  │Governance│  │  │   │
+│  │  │  │  Agent   │  │  Agent   │  │  Agent   │  │  Agent   │  │  │   │
+│  │  │  └──────────┘  └──────────┘  └──────────┘  └──────────┘  │  │   │
+│  │  │                                                             │  │   │
+│  │  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  │  │   │
+│  │  │  │  Risk    │  │Execution │  │ Payment  │  │Monitoring│  │  │   │
+│  │  │  │  Agent   │  │  Agent   │  │  Agent   │  │  Agent   │  │  │   │
+│  │  │  └──────────┘  └──────────┘  └──────────┘  └──────────┘  │  │   │
+│  │  │                                                             │  │   │
+│  │  │  ┌──────────┐  ┌──────────┐                               │  │   │
+│  │  │  │ Learning │  │ Security │                               │  │   │
+│  │  │  │  Agent   │  │  Agent   │                               │  │   │
+│  │  │  └──────────┘  └──────────┘                               │  │   │
+│  │  │                                                             │  │   │
+│  │  │  • Agent Consciousness (self-awareness, memory, goals)     │  │   │
+│  │  │  • Inter-agent communication (signed messages)             │  │   │
+│  │  │  • Prompt injection defense (multi-layer security)         │  │   │
+│  │  │  • Knowledge sharing & consensus                           │  │   │
+│  │  └─────────────────────────────────────────────────────────────┘  │   │
+│  │                                                                    │   │
+│  │              ┌──────▼──────┐                                      │   │
+│  │              │ ICB Agent   │                                      │   │
+│  │              │    SDK      │                                      │   │
+│  │              └──────┬──────┘                                      │   │
+│  └─────────────────────┼─────────────────────────────────────────────┘   │
+│                        │                                                  │
+│         ┌──────────────┼──────────────┐                                  │
+│         │              │              │                                  │
+│         ▼              ▼              ▼                                  │
+│  ┌──────────┐   ┌──────────┐   ┌──────────┐                            │
+│  │ JSON-RPC │   │WebSocket │   │  Solana  │                            │
+│  │   API    │   │  Events  │   │   RPC    │                            │
+│  └────┬─────┘   └────┬─────┘   └────┬─────┘                            │
+│       │              │              │                                   │
+│       └──────────────┼──────────────┘                                   │
+│                      │                                                   │
+│              ┌───────▼────────┐                                         │
+│              │   Backend      │                                         │
+│              │   Services     │                                         │
+│              │ (Node.js/TS)   │                                         │
+│              │                │                                         │
+│              │ • Revenue      │                                         │
+│              │ • Staking      │                                         │
+│              │ • Trading      │                                         │
+│              │ • Security     │                                         │
+│              └───────┬────────┘                                         │
+│                      │                                                   │
+│         ┌────────────┼────────────┐                                     │
+│         │            │            │                                     │
+│         ▼            ▼            ▼                                     │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐                               │
+│  │PostgreSQL│ │  Redis   │ │  Solana  │                               │
+│  │(Supabase)│ │  Cache   │ │ Programs │                               │
+│  └──────────┘ └──────────┘ └──────────┘                               │
+│                                                                          │
+│  ┌──────────────────────────────────────────────────────────────────┐  │
+│  │         External Integrations (Agent-Optimized)                   │  │
+│  │                                                                    │  │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐        │  │
+│  │  │  Helius  │  │ Kamino   │  │ Meteora  │  │ Jupiter  │        │  │
+│  │  │ RPC+Send │  │ Finance  │  │ Protocol │  │   API    │        │  │
+│  │  └──────────┘  └──────────┘  └──────────┘  └──────────┘        │  │
+│  │                                                                    │  │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐        │  │
+│  │  │MagicBlock│  │OpenRouter│  │ x402-Pay │  │  Pyth    │        │  │
+│  │  │    ER    │  │    AI    │  │    AI    │  │  Oracle  │        │  │
+│  │  └──────────┘  └──────────┘  └──────────┘  └──────────┘        │  │
+│  │                                                                    │  │
+│  │  ┌──────────┐  ┌──────────┐                                      │  │
+│  │  │Switchbrd │  │ Birdeye  │                                      │  │
+│  │  │  Oracle  │  │   API    │                                      │  │
+│  │  └──────────┘  └──────────┘                                      │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
+│                                                                          │
+│  ┌──────────────────────────────────────────────────────────────────┐  │
+│  │    Optional: Human Observer Dashboard (Read-Only)                │  │
+│  │              Vite + React + Tailwind                              │  │
+│  │    • Revenue metrics • Staking APY • Agent activity              │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Component Breakdown
@@ -245,6 +285,107 @@ The Internet Central Bank is an **Agent-First DeFi Protocol** that coordinates l
   - Cron jobs for periodic health checks
   - Multi-agent coordination for complex strategies
 - **Storage**: Supabase for rebalance history
+
+**Service: Revenue Tracker** ✅
+- **Purpose**: Track and distribute protocol fees
+- **Fee Collection**:
+  - Transaction fees (0.05% per operation)
+  - Oracle query fees (0.001-0.01 USDC via x402)
+  - ER session fees (0.02% per session)
+  - AI usage markup (10% on OpenRouter costs)
+  - Proposal fees (10 ICU burned)
+  - Vault management fee (0.1% annually)
+- **Distribution**:
+  - 40% → ICU buyback & burn (via Jupiter)
+  - 30% → Agent staking rewards
+  - 20% → Development fund
+  - 10% → Insurance fund
+- **Storage**: Supabase for fee history and distribution records
+- **Analytics**: Real-time revenue dashboard via Supabase subscriptions
+- **Implementation**: `backend/src/services/revenue/revenue-tracker.ts`
+
+**Service: Agent Staking** ✅
+- **Purpose**: ICU token staking and SOL staking with Helius validator
+- **ICU Staking**:
+  - Minimum stake: 100 ICU
+  - 50% fee discount for stakers
+  - 7-day unstake cooldown
+  - Proportional reward distribution from 30% of protocol fees
+  - Real-time APY calculation (12.4% to 1,240% based on agent count)
+- **SOL Staking**:
+  - 0% commission Helius validator
+  - ~7% APY
+  - Programmatic stake account management
+  - Deactivate and withdraw functionality
+  - Smart Transaction support with automatic priority fees
+- **Storage**: Supabase for staking records and rewards
+- **Implementation**: 
+  - `backend/src/services/staking/agent-staking.ts`
+  - `backend/src/services/staking/helius-staking-client.ts`
+
+**Service: Helius Sender** ✅
+- **Purpose**: Ultra-low latency transaction submission
+- **Features**:
+  - Dual routing (Solana validators + Jito simultaneously)
+  - Dynamic tip calculation (75th percentile from Jito API)
+  - Automatic compute unit optimization via simulation
+  - Dynamic priority fees from Helius Priority Fee API
+  - Retry logic with exponential backoff
+  - Connection warming for reduced cold start latency
+  - Regional endpoint support (7 regions: slc, ewr, lon, fra, ams, sg, tyo)
+  - SWQOS-only mode for cost optimization
+  - Batch transaction support
+- **Performance**: Sub-100ms transaction submission
+- **Implementation**: `backend/src/services/helius/helius-sender-client.ts`
+
+**Service: Trading Agent** ✅
+- **Purpose**: High-frequency trading with ultra-low latency
+- **Features**:
+  - Arbitrage detection (>0.5% profit threshold)
+  - MagicBlock ER integration for sub-100ms execution
+  - Batch trade execution
+  - Automatic revenue tracking
+  - Real-time opportunity monitoring
+- **Implementation**: `backend/src/services/agent-swarm/agents/trading-agent.ts`
+
+**Service: Security Agent** ✅
+- **Purpose**: Autonomous blockchain security auditing
+- **Capabilities**:
+  - Static analysis (cargo-audit, cargo-geiger, semgrep)
+  - Fuzzing (Trident, cargo-fuzz, property-based testing)
+  - Penetration testing (Neodyme PoC framework, exploit detection)
+  - Cryptographic verification (signatures, key derivation, randomness)
+  - CTF challenge solving (OtterSec framework)
+  - Real-time exploit detection (transaction monitoring, pattern matching)
+- **Automation**: 6-hour cron job for continuous security monitoring
+- **Implementation**: `backend/src/services/agent-swarm/agents/security-agent.ts`
+
+**Service: Agent Consciousness** ✅
+- **Purpose**: Self-awareness and inter-agent communication
+- **Features**:
+  - Consciousness state (awareness, autonomy, learning, creativity, empathy)
+  - Memory system (short-term, long-term, episodic, semantic)
+  - Goal-oriented behavior with progress tracking
+  - Belief system with confidence levels
+  - Cryptographic identity with Ed25519 signatures
+  - Inter-agent communication protocol with signed messages
+  - Prompt injection defense (multi-layer threat detection)
+  - Knowledge sharing and consciousness synchronization
+  - Reputation-based trust system
+  - AI-powered decision making via OpenRouter
+- **Implementation**: `backend/src/services/agent-swarm/consciousness.ts`
+
+**Service: Agent Swarm Orchestrator** ✅
+- **Purpose**: Master orchestrator for multi-agent coordination
+- **Features**:
+  - Workflow execution engine (5 workflows: ILI calculation, policy execution, reserve management, governance, security audit)
+  - Message routing between agents
+  - Consensus coordination
+  - Agent lifecycle management
+  - Performance monitoring
+  - Autonomous operations (self-management, auto-upgrade, skill learning)
+- **Agents**: 10 specialized agents (Policy, Oracle, DeFi, Governance, Risk, Execution, Payment, Monitoring, Learning, Security)
+- **Implementation**: `backend/src/services/agent-swarm/orchestrator.ts`
 
 **Service: Revenue Tracker**
 - **Purpose**: Track and distribute protocol fees
