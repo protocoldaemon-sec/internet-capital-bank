@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { metricsService } from '../services/memory/metrics';
+import { logger } from '../services/memory/logger';
+import { slowQueryLogger } from '../services/memory/slow-query-logger';
 
 /**
  * Middleware to track request metrics
@@ -24,7 +26,18 @@ export function metricsMiddleware(req: Request, res: Response, next: NextFunctio
 
     // Log slow queries (> 1 second)
     if (duration > 1000) {
-      console.warn(`[Metrics] Slow query detected: ${req.method} ${endpoint} took ${duration}ms`);
+      slowQueryLogger.logSlowQuery({
+        endpoint,
+        method: req.method,
+        duration,
+        threshold: 1000,
+        queryParams: Object.keys(req.query).length > 0 ? req.query : undefined,
+        requestBody: req.method !== 'GET' && req.body ? req.body : undefined,
+        userAgent: req.get('User-Agent'),
+        ip: req.ip,
+        requestId: req.requestId,
+      });
+      
       metricsService.incrementCounter('memory_slow_queries_total', 1, { endpoint });
     }
   });

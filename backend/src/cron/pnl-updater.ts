@@ -3,7 +3,7 @@ import { pnlCalculator } from '../services/memory/pnl-calculator';
 
 /**
  * Cron job to update PnL calculations every 10 minutes
- * Schedule: */10 * * * * (every 10 minutes)
+ * Schedule: every 10 minutes
  */
 export function startPnLUpdater(): void {
   console.log('Starting PnL updater cron job (every 10 minutes)...');

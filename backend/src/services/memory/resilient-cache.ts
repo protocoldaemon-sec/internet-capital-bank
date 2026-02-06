@@ -1,6 +1,8 @@
 import { CacheService, getCacheService } from './cache-service';
 import { circuitBreakers, retryWithBackoff } from './circuit-breaker';
 import { supabase } from '../supabase';
+import { gracefulDegradation } from './graceful-degradation';
+import { memoryEventEmitter } from './event-emitter';
 
 /**
  * Resilient Cache Service with Graceful Degradation
@@ -9,6 +11,9 @@ import { supabase } from '../supabase';
  * - Falls back to direct Supabase queries when Redis is unavailable
  * - Continues serving cached data when Supabase fails
  * - Queues write operations for retry when dependencies fail
+ * 
+ * This service now delegates to the GracefulDegradationService for
+ * comprehensive dependency failure handling.
  * 
  * Requirements: 14.1, 14.2, 14.3
  */
@@ -80,7 +85,20 @@ export class ResilientCacheService {
           });
         },
         3, // 3 attempts
-        1000 // 1 second base delay
+        1000, // 1 second base delay
+        {
+          operation: `Redis cache set for key: ${key}`,
+          emitEvent: (error: Error) => {
+            memoryEventEmitter.emitSystemErrorEvent({
+              message: `Cache set operation failed after 3 retries: ${error.message}`,
+              code: 'CACHE_SET_RETRY_EXHAUSTED',
+              context: {
+                key,
+                error: error.message,
+              },
+            });
+          },
+        }
       );
     } catch (error) {
       console.error('[Resilient Cache] Failed to set cache after retries, queueing:', error);
@@ -110,7 +128,20 @@ export class ResilientCacheService {
           });
         },
         3,
-        1000
+        1000,
+        {
+          operation: `Redis cache delete for key: ${key}`,
+          emitEvent: (error: Error) => {
+            memoryEventEmitter.emitSystemErrorEvent({
+              message: `Cache delete operation failed after 3 retries: ${error.message}`,
+              code: 'CACHE_DELETE_RETRY_EXHAUSTED',
+              context: {
+                key,
+                error: error.message,
+              },
+            });
+          },
+        }
       );
     } catch (error) {
       console.error('[Resilient Cache] Failed to delete cache key:', error);
@@ -130,7 +161,20 @@ export class ResilientCacheService {
           });
         },
         3,
-        1000
+        1000,
+        {
+          operation: `Redis cache invalidate pattern: ${pattern}`,
+          emitEvent: (error: Error) => {
+            memoryEventEmitter.emitSystemErrorEvent({
+              message: `Cache invalidate pattern operation failed after 3 retries: ${error.message}`,
+              code: 'CACHE_INVALIDATE_RETRY_EXHAUSTED',
+              context: {
+                pattern,
+                error: error.message,
+              },
+            });
+          },
+        }
       );
     } catch (error) {
       console.error('[Resilient Cache] Failed to invalidate pattern:', error);

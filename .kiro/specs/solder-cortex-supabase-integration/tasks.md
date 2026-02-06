@@ -9,7 +9,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
 - [x] 1. Set up database schema and migrations
   - Create Supabase migration files for all memory tables
   - Create indexes for query performance optimization
-  - Set up database connection pooling configuration
+  - Set up database connection pooling configuration (20-100 connections)
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8_
 
 - [x] 1.1 Write unit tests for schema validation
@@ -18,7 +18,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
   - Test foreign key constraints
   - _Requirements: 1.1-1.8_
 
-- [ ] 2. Implement LYS Labs WebSocket client
+- [x] 2. Implement LYS Labs WebSocket client
   - [x] 2.1 Create WebSocket client with connection management
     - Implement connect/disconnect methods
     - Implement subscription management (subscribe/unsubscribe wallet)
@@ -156,7 +156,8 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - Implement getRiskProfile
     - Implement getPredictionMarket
     - Implement getPortfolioAnalytics
-    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
+    - Use Supabase connection pooling (20-100 connections)
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 13.2_
   
   - [ ]* 7.2 Write property test for query response completeness
     - **Property 5: Query Response Completeness**
@@ -262,7 +263,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - Call calculateAllWallets for all registered wallets
     - _Requirements: 12.3_
 
-- [x] 9. Implement risk analysis engine
+- [ ] 9. Implement risk analysis engine
   - [x] 9.1 Create risk analyzer service
     - Implement analyzeTransaction with anomaly score calculation
     - Implement calculateWalletRisk with aggregated metrics
@@ -326,7 +327,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 13: Event Emission on State Change**
     - **Validates: Requirements 10.1, 10.2, 10.3, 10.4**
   
-  - [ ] 12.3 Implement subscription management
+  - [x] 12.3 Implement subscription management
     - Implement subscribe/unsubscribe methods
     - Support event type and wallet address filtering
     - Send confirmation message with subscription ID
@@ -336,7 +337,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 14: Event Subscription Confirmation**
     - **Validates: Requirements 10.6**
   
-  - [ ] 12.5 Implement event rate limiting
+  - [x] 12.5 Implement event rate limiting
     - Rate limit to 100 events/sec per agent
     - Buffer and drop excess events
     - _Requirements: 10.7_
@@ -346,7 +347,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Validates: Requirements 10.7**
 
 - [ ] 13. Implement error handling and resilience
-  - [ ] 13.1 Implement graceful degradation for dependency failures
+  - [x] 13.1 Implement graceful degradation for dependency failures
     - Continue serving cached data when LYS Labs disconnects
     - Queue write operations when Supabase fails
     - Fall back to Supabase when Redis fails
@@ -356,7 +357,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 38: Service Resilience Under Dependency Failure**
     - **Validates: Requirements 14.1, 14.2, 14.3**
   
-  - [ ] 13.3 Implement write operation retry with exponential backoff
+  - [x] 13.3 Implement write operation retry with exponential backoff
     - Retry up to 3 times with delays (1s, 2s, 4s)
     - Log error and emit system.error event on exhaustion
     - _Requirements: 14.4, 14.5_
@@ -369,7 +370,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 40: Retry Exhaustion Error Handling**
     - **Validates: Requirements 14.5**
   
-  - [ ] 13.6 Implement circuit breaker pattern
+  - [x] 13.6 Implement circuit breaker pattern
     - Open circuit after 5 consecutive failures
     - Keep open for 5 minutes
     - Return degraded service response when open
@@ -383,7 +384,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 42: Circuit Breaker Degraded Mode**
     - **Validates: Requirements 14.7**
   
-  - [ ] 13.9 Implement capacity overload response
+  - [x] 13.9 Implement capacity overload response
     - Return HTTP 503 with retry-after header when at capacity
     - _Requirements: 13.4_
   
@@ -391,8 +392,8 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 35: Capacity Overload Response**
     - **Validates: Requirements 13.4**
 
-- [ ] 14. Implement monitoring and observability
-  - [ ] 14.1 Create Prometheus metrics endpoint
+- [x] 14. Implement monitoring and observability
+  - [x] 14.1 Create Prometheus metrics endpoint
     - Expose /metrics endpoint
     - Track query count, latency, cache hit rate, error rate
     - Track WebSocket metrics (connection status, message rate)
@@ -403,7 +404,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 43: Metrics Tracking Completeness**
     - **Validates: Requirements 15.2, 15.3, 15.4**
   
-  - [ ] 14.3 Implement comprehensive error logging
+  - [x] 14.3 Implement comprehensive error logging
     - Log all errors with stack trace and context
     - Include request parameters, timestamp, severity
     - _Requirements: 15.5_
@@ -412,7 +413,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 44: Error Logging Completeness**
     - **Validates: Requirements 15.5**
   
-  - [ ] 14.5 Implement health check endpoint
+  - [x] 14.5 Implement health check endpoint
     - Create /health endpoint
     - Return service status, dependency health, query load, pool status
     - _Requirements: 15.6, 13.7_
@@ -421,7 +422,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 37: Health Check Completeness**
     - **Validates: Requirements 13.7**
   
-  - [ ] 14.7 Implement critical error alerting
+  - [x] 14.7 Implement critical error alerting
     - Emit alerts to Prometheus Alertmanager for critical errors
     - _Requirements: 15.7_
   
@@ -429,7 +430,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 45: Critical Error Alerting**
     - **Validates: Requirements 15.7**
   
-  - [ ] 14.9 Implement slow query logging
+  - [x] 14.9 Implement slow query logging
     - Log queries exceeding 1 second with full context
     - _Requirements: 13.6_
   

@@ -1,5 +1,6 @@
 import WebSocket from 'ws';
 import { EventEmitter } from 'events';
+import { metricsService } from './metrics';
 
 /**
  * Transaction types supported by LYS Labs
@@ -62,6 +63,9 @@ export class LYSLabsClient extends EventEmitter {
   private isManualDisconnect = false;
   private heartbeatInterval: NodeJS.Timeout | null = null;
   private heartbeatIntervalMs = 30000; // 30 seconds
+  private messageCount = 0;
+  private lastMessageRateUpdate = Date.now();
+  private totalReconnections = 0;
 
   /**
    * Create a new LYS Labs WebSocket client
@@ -107,6 +111,9 @@ export class LYSLabsClient extends EventEmitter {
           this.emit('connected');
           this.startHeartbeat();
           
+          // Update metrics
+          metricsService.recordWebSocketMetrics(true, this.calculateMessageRate(), this.totalReconnections);
+          
           // Re-subscribe to all wallets after reconnection
           this.resubscribeAll();
           
@@ -116,8 +123,16 @@ export class LYSLabsClient extends EventEmitter {
         // Message received
         this.ws.on('message', (data: WebSocket.Data) => {
           try {
+            this.messageCount++;
             const message = JSON.parse(data.toString()) as WSMessage;
             this.handleMessage(message);
+            
+            // Update message rate metrics periodically (every 10 seconds)
+            const now = Date.now();
+            if (now - this.lastMessageRateUpdate > 10000) {
+              metricsService.recordWebSocketMetrics(true, this.calculateMessageRate(), this.totalReconnections);
+              this.lastMessageRateUpdate = now;
+            }
           } catch (error) {
             console.error('[LYS Labs] Error parsing message:', error);
             this.emit('error', new Error(`Failed to parse message: ${error}`));
@@ -130,6 +145,9 @@ export class LYSLabsClient extends EventEmitter {
           this.isConnecting = false;
           this.stopHeartbeat();
           this.emit('disconnected', { code, reason });
+
+          // Update metrics
+          metricsService.recordWebSocketMetrics(false, this.calculateMessageRate(), this.totalReconnections);
 
           // Attempt reconnection if not manually disconnected
           if (!this.isManualDisconnect) {
@@ -379,6 +397,7 @@ export class LYSLabsClient extends EventEmitter {
 
     this.reconnectTimeout = setTimeout(() => {
       this.reconnectAttempts++;
+      this.totalReconnections++;
       console.log(`[LYS Labs] Reconnection attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
       
       this.connect()
@@ -453,5 +472,24 @@ export class LYSLabsClient extends EventEmitter {
    */
   public getSubscriptions(): string[] {
     return Array.from(this.subscriptions);
+  }
+
+  /**
+   * Calculate current message rate (messages per second)
+   * @returns Message rate in messages/second
+   */
+  private calculateMessageRate(): number {
+    const now = Date.now();
+    const timeDiff = (now - this.lastMessageRateUpdate) / 1000; // Convert to seconds
+    
+    if (timeDiff === 0) {
+      return 0;
+    }
+    
+    // Reset message count for next calculation
+    const rate = this.messageCount / timeDiff;
+    this.messageCount = 0;
+    
+    return rate;
   }
 }

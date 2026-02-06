@@ -18,6 +18,9 @@ export async function getRedisClient(): Promise<RedisClientType> {
   return redisClient;
 }
 
+// Export the client for health checks and direct access
+export { redisClient };
+
 export async function getCachedData<T>(
   key: string,
   ttl: number = 300

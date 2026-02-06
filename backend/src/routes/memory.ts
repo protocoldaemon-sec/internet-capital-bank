@@ -4,8 +4,12 @@ import { redisClient } from '../services/redis';
 import crypto from 'crypto';
 import { checkPrivacyAuthorization } from '../middleware/privacy-auth';
 import { queryRateLimit } from '../middleware/query-rate-limit';
+import { capacityCheck } from '../middleware/capacity-check';
 
 const router = Router();
+
+// Apply capacity check first (before rate limiting)
+router.use(capacityCheck);
 
 // Apply rate limiting to all memory routes
 router.use(queryRateLimit);

@@ -139,4 +139,77 @@ export const config = {
       protocolWallets: (process.env.MEMORY_PROTOCOL_WALLETS || '').split(',').filter(Boolean),
     },
   },
+
+  // Solana Agent Kit (SAK) integration configuration
+  sak: {
+    enabled: process.env.SAK_ENABLED === 'true',
+    
+    // Core SAK configuration
+    core: {
+      rpcUrl: process.env.SAK_RPC_URL || process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com',
+      privateKey: process.env.SAK_PRIVATE_KEY || '',
+      network: process.env.SAK_NETWORK || process.env.SOLANA_NETWORK || 'devnet',
+      commitment: process.env.SAK_COMMITMENT || 'confirmed',
+    },
+    
+    // Plugin configuration
+    plugins: {
+      token: {
+        enabled: process.env.SAK_TOKEN_PLUGIN_ENABLED !== 'false', // Default enabled
+        priority: parseInt(process.env.SAK_TOKEN_PLUGIN_PRIORITY || '100', 10),
+      },
+      defi: {
+        enabled: process.env.SAK_DEFI_PLUGIN_ENABLED !== 'false', // Default enabled
+        priority: parseInt(process.env.SAK_DEFI_PLUGIN_PRIORITY || '90', 10),
+      },
+      nft: {
+        enabled: process.env.SAK_NFT_PLUGIN_ENABLED === 'true', // Default disabled
+        priority: parseInt(process.env.SAK_NFT_PLUGIN_PRIORITY || '80', 10),
+      },
+      misc: {
+        enabled: process.env.SAK_MISC_PLUGIN_ENABLED !== 'false', // Default enabled
+        priority: parseInt(process.env.SAK_MISC_PLUGIN_PRIORITY || '70', 10),
+      },
+      blinks: {
+        enabled: process.env.SAK_BLINKS_PLUGIN_ENABLED === 'true', // Default disabled
+        priority: parseInt(process.env.SAK_BLINKS_PLUGIN_PRIORITY || '60', 10),
+      },
+    },
+    
+    // Integration settings
+    integration: {
+      fallbackEnabled: process.env.SAK_FALLBACK_ENABLED !== 'false', // Default enabled
+      retryAttempts: parseInt(process.env.SAK_RETRY_ATTEMPTS || '3', 10),
+      retryDelay: parseInt(process.env.SAK_RETRY_DELAY || '1000', 10), // ms
+      timeoutMs: parseInt(process.env.SAK_TIMEOUT_MS || '30000', 10),
+      batchSize: parseInt(process.env.SAK_BATCH_SIZE || '10', 10),
+    },
+    
+    // Monitoring configuration
+    monitoring: {
+      metricsEnabled: process.env.SAK_METRICS_ENABLED !== 'false', // Default enabled
+      loggingLevel: process.env.SAK_LOGGING_LEVEL || 'info',
+      healthCheckInterval: parseInt(process.env.SAK_HEALTH_CHECK_INTERVAL || '60000', 10), // ms
+      alertThresholds: {
+        errorRate: parseFloat(process.env.SAK_ERROR_RATE_THRESHOLD || '0.05'), // 5%
+        responseTime: parseInt(process.env.SAK_RESPONSE_TIME_THRESHOLD || '5000', 10), // ms
+        memoryUsage: parseFloat(process.env.SAK_MEMORY_USAGE_THRESHOLD || '0.8'), // 80%
+      },
+    },
+    
+    // Error handling configuration
+    errorHandling: {
+      circuitBreaker: {
+        failureThreshold: parseInt(process.env.SAK_CIRCUIT_BREAKER_THRESHOLD || '5', 10),
+        openDurationMs: parseInt(process.env.SAK_CIRCUIT_BREAKER_DURATION || '30000', 10), // 30 seconds
+        halfOpenMaxCalls: parseInt(process.env.SAK_CIRCUIT_BREAKER_HALF_OPEN_CALLS || '3', 10),
+      },
+      exponentialBackoff: {
+        initialDelay: parseInt(process.env.SAK_BACKOFF_INITIAL_DELAY || '1000', 10), // ms
+        maxDelay: parseInt(process.env.SAK_BACKOFF_MAX_DELAY || '60000', 10), // ms
+        multiplier: parseFloat(process.env.SAK_BACKOFF_MULTIPLIER || '2.0'),
+        jitter: parseFloat(process.env.SAK_BACKOFF_JITTER || '0.25'), // 25%
+      },
+    },
+  },
 };

@@ -27,6 +27,7 @@
     "helius-sdk": "^2.1.0",
     "node-cron": "^3.0.3",
     "redis": "^4.6.11",
+    "solana-agent-kit": "^2.0.10",
     "uuid": "^9.0.1",
     "ws": "^8.16.0"
   },

@@ -159,6 +159,7 @@ export class CircuitBreaker {
  * @param fn - Function to retry
  * @param maxAttempts - Maximum number of attempts (default: 3)
  * @param baseDelay - Base delay in ms (default: 1000)
+ * @param context - Optional context for error logging and event emission
  * @returns Promise with function result
  * 
  * Requirements: 14.4, 14.5
@@ -166,7 +167,8 @@ export class CircuitBreaker {
 export async function retryWithBackoff<T>(
   fn: () => Promise<T>,
   maxAttempts: number = 3,
-  baseDelay: number = 1000
+  baseDelay: number = 1000,
+  context?: { operation?: string; emitEvent?: (error: Error) => void }
 ): Promise<T> {
   let lastError: Error | undefined;
 
@@ -177,7 +179,15 @@ export async function retryWithBackoff<T>(
       lastError = error as Error;
       
       if (attempt === maxAttempts) {
-        console.error(`[Retry] All ${maxAttempts} attempts failed:`, lastError);
+        // Log error with full context (Requirement 14.5)
+        const errorContext = context?.operation ? ` for operation: ${context.operation}` : '';
+        console.error(`[Retry] All ${maxAttempts} attempts failed${errorContext}:`, lastError);
+        
+        // Emit system.error event on retry exhaustion (Requirement 14.5)
+        if (context?.emitEvent) {
+          context.emitEvent(lastError);
+        }
+        
         throw lastError;
       }
 

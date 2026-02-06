@@ -22,11 +22,18 @@ export { CacheService, getCacheService } from './cache-service';
 export { PnLCalculator, pnlCalculator } from './pnl-calculator';
 export { RiskAnalyzer, riskAnalyzer } from './risk-analyzer';
 export { MemoryEventEmitter, memoryEventEmitter, EventType } from './event-emitter';
+export { PredictionMarketService, predictionMarketService } from './prediction-market';
+export { 
+  startMonitoring as startConnectionPoolMonitoring,
+  stopMonitoring as stopConnectionPoolMonitoring,
+  getPoolStats
+} from './connection-pool-monitor';
 
 import { LYSLabsClient } from './lys-labs-client';
 import { TransactionIndexer } from './transaction-indexer';
 import { WalletRegistrationManager } from './wallet-registration';
 import { startPnLUpdater } from '../../cron/pnl-updater';
+import { startMonitoring as startConnectionPoolMonitoring, stopMonitoring as stopConnectionPoolMonitoring } from './connection-pool-monitor';
 
 /**
  * Initialize the memory service
@@ -79,6 +86,10 @@ export async function initializeMemoryService(): Promise<void> {
     console.log('[Memory Service] Starting PnL updater cron job...');
     startPnLUpdater();
 
+    // Start connection pool monitoring
+    console.log('[Memory Service] Starting connection pool monitoring...');
+    startConnectionPoolMonitoring();
+
     console.log('[Memory Service] Solder Cortex memory layer initialized successfully');
   } catch (error) {
     console.error('[Memory Service] Failed to initialize memory service:', error);
@@ -91,6 +102,10 @@ export async function initializeMemoryService(): Promise<void> {
  */
 export async function shutdownMemoryService(): Promise<void> {
   console.log('[Memory Service] Shutting down Solder Cortex memory layer...');
+  
+  // Stop connection pool monitoring
+  stopConnectionPoolMonitoring();
+  
   // Add cleanup logic here (close WebSocket, flush caches, etc.)
   console.log('[Memory Service] Shutdown complete');
 }

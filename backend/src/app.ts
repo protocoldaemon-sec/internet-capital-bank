@@ -3,6 +3,12 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { config } from './config';
 import { metricsMiddleware } from './middleware/metrics-middleware';
+import { 
+  loggingMiddleware, 
+  errorLoggingMiddleware, 
+  notFoundLoggingMiddleware 
+} from './middleware/logging-middleware';
+import { logger } from './services/memory/logger';
 
 // Import routes
 import iliRoutes from './routes/ili';
@@ -16,6 +22,7 @@ import complianceRoutes from './routes/compliance';
 import memoryRoutes from './routes/memory';
 import healthRoutes from './routes/health';
 import metricsRoutes from './routes/metrics';
+import slowQueriesRoutes from './routes/slow-queries';
 
 export function createApp(): Application {
   const app = express();
@@ -24,6 +31,9 @@ export function createApp(): Application {
   app.use(cors());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+
+  // Logging middleware (must be early in the chain)
+  app.use(loggingMiddleware);
 
   // Metrics tracking middleware
   app.use(metricsMiddleware);
@@ -38,6 +48,7 @@ export function createApp(): Application {
 
   // Health check
   app.get('/health', (req, res) => {
+    logger.info('Health check requested', { requestId: req.requestId });
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
@@ -68,18 +79,14 @@ export function createApp(): Application {
   // Metrics endpoint (Prometheus)
   app.use('/metrics', metricsRoutes);
 
-  // Error handling middleware
-  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-    console.error('Error:', err);
-    res.status(err.status || 500).json({
-      error: err.message || 'Internal server error',
-    });
-  });
+  // Slow queries endpoint
+  app.use('/api/v1/slow-queries', slowQueriesRoutes);
 
-  // 404 handler
-  app.use((req, res) => {
-    res.status(404).json({ error: 'Not found' });
-  });
+  // Error handling middleware (must be after all routes)
+  app.use(errorLoggingMiddleware);
+
+  // 404 handler (must be last)
+  app.use(notFoundLoggingMiddleware);
 
   return app;
 }
