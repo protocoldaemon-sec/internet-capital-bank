@@ -3,6 +3,8 @@ import { getSupabaseClient } from '../supabase';
 import { LYSTransaction, TransactionType } from './lys-labs-client';
 import { createCipheriv, createDecipheriv, randomBytes, createHash } from 'crypto';
 import { CacheService, getCacheService } from './cache-service';
+import { memoryEventEmitter } from './event-emitter';
+import { riskAnalyzer } from './risk-analyzer';
 
 /**
  * Indexing status for wallet registration
@@ -179,6 +181,59 @@ export class TransactionIndexer {
         console.error(`[Transaction Indexer] Failed to invalidate cache for wallet ${tx.walletAddress}:`, cacheError);
       }
 
+      // Emit transaction event for real-time notifications
+      memoryEventEmitter.emitTransactionEvent(transactionData);
+
+      // Analyze transaction for risk/anomalies
+      try {
+        const riskAnalysis = await riskAnalyzer.analyzeTransaction({
+          signature: tx.signature,
+          wallet_address: tx.walletAddress,
+          timestamp: tx.timestamp,
+          transaction_type: tx.type,
+          amount: tx.amount,
+          token_mint: tx.tokenMint,
+          counterparty_address: metadata.counterparty,
+          fee_amount: metadata.fee,
+          metadata: tx.metadata,
+        });
+
+        // If high risk, flag and emit anomaly event
+        if (riskAnalysis.isHighRisk) {
+          await riskAnalyzer.flagTransaction(
+            {
+              signature: tx.signature,
+              wallet_address: tx.walletAddress,
+              timestamp: tx.timestamp,
+              transaction_type: tx.type,
+              amount: tx.amount,
+              token_mint: tx.tokenMint,
+              counterparty_address: metadata.counterparty,
+              fee_amount: metadata.fee,
+              metadata: tx.metadata,
+            },
+            riskAnalysis,
+            'large_amount' as any, // Simplified - would determine actual type
+            riskAnalysis.anomalyScore > 90 ? 'critical' : 'high',
+            `High-risk transaction detected: ${riskAnalysis.riskFactors.join(', ')}`
+          );
+
+          // Emit anomaly event
+          memoryEventEmitter.emitAnomalyEvent({
+            transaction_signature: tx.signature,
+            wallet_address: tx.walletAddress,
+            anomaly_type: 'large_amount',
+            severity: riskAnalysis.anomalyScore > 90 ? 'critical' : 'high',
+            score: riskAnalysis.anomalyScore,
+            description: `High-risk transaction detected: ${riskAnalysis.riskFactors.join(', ')}`,
+            timestamp: tx.timestamp,
+          });
+        }
+      } catch (riskError) {
+        console.error(`[Transaction Indexer] Risk analysis failed for ${tx.signature}:`, riskError);
+        // Continue - risk analysis failure shouldn't block indexing
+      }
+
       console.log(`[Transaction Indexer] Indexed transaction ${tx.signature} for wallet ${tx.walletAddress}`);
     } catch (error) {
       console.error(`[Transaction Indexer] Failed to index transaction ${tx.signature}:`, error);
@@ -348,6 +403,15 @@ export class TransactionIndexer {
       // Log cache invalidation errors but don't fail the balance update
       console.error(`[Transaction Indexer] Failed to invalidate balance cache for wallet ${walletAddress}:`, cacheError);
     }
+
+    // Emit balance update event
+    memoryEventEmitter.emitBalanceUpdateEvent({
+      wallet_address: walletAddress,
+      token_mint: tokenMint,
+      token_symbol: tokenSymbol,
+      amount: finalBalance,
+      last_updated: timestamp,
+    });
   }
 
   /**

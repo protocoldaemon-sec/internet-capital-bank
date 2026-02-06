@@ -149,7 +149,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 7. Implement query API service
-  - [ ] 7.1 Create query API with Express routes
+  - [x] 7.1 Create query API with Express routes
     - Implement getTransactionHistory with pagination
     - Implement getWalletBalances
     - Implement getPnLAnalytics
@@ -162,7 +162,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 5: Query Response Completeness**
     - **Validates: Requirements 3.2, 3.3, 3.4, 3.5, 4.1, 4.2, 4.3, 4.5, 5.1, 5.2, 5.3, 6.3, 6.5, 7.1, 7.2**
   
-  - [ ] 7.3 Implement cache-first query pattern
+  - [x] 7.3 Implement cache-first query pattern
     - Check Redis cache before Supabase query
     - Cache results with 5-minute TTL on cache miss
     - _Requirements: 9.1, 9.2, 9.3_
@@ -175,7 +175,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 6: Cached Query Performance**
     - **Validates: Requirements 3.1, 9.2**
   
-  - [ ] 7.6 Implement query filtering and pagination
+  - [x] 7.6 Implement query filtering and pagination
     - Implement filter logic for transaction type, token mint, amount range
     - Implement pagination with page/pageSize parameters
     - _Requirements: 3.6, 3.7, 7.3_
@@ -188,7 +188,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 8: Pagination Consistency**
     - **Validates: Requirements 3.6**
   
-  - [ ] 7.9 Implement privacy protection authorization
+  - [x] 7.9 Implement privacy protection authorization
     - Check authorization token for privacy-protected wallets
     - Return 401 for unauthorized queries without revealing wallet existence
     - _Requirements: 8.2, 8.5_
@@ -197,7 +197,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 16: Privacy Protection Authorization**
     - **Validates: Requirements 8.2, 8.5**
   
-  - [ ] 7.11 Implement query rate limiting
+  - [x] 7.11 Implement query rate limiting
     - Implement rate limiter (100 queries/min per agent)
     - Return 429 for rate limit exceeded
     - _Requirements: 13.5_
@@ -206,8 +206,8 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 34: Query Rate Limiting**
     - **Validates: Requirements 13.5**
 
-- [ ] 8. Implement PnL calculation engine
-  - [ ] 8.1 Create PnL calculator service
+- [x] 8. Implement PnL calculation engine
+  - [x] 8.1 Create PnL calculator service
     - Implement calculateRealizedPnL with FIFO cost basis
     - Implement calculateUnrealizedPnL with current prices
     - Implement calculateTotalPnL for all time periods
@@ -221,12 +221,12 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 23: Unrealized PnL Calculation**
     - **Validates: Requirements 12.2**
   
-  - [ ] 8.4 Implement cost basis tracking
+  - [x] 8.4 Implement cost basis tracking
     - Store cost basis entries in cost_basis table
     - Handle partial position closes by splitting entries
     - _Requirements: 12.1_
   
-  - [ ] 8.5 Implement multi-token PnL aggregation
+  - [x] 8.5 Implement multi-token PnL aggregation
     - Calculate PnL separately for each token
     - Aggregate for total portfolio PnL
     - _Requirements: 12.5_
@@ -235,7 +235,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 25: Multi-Token PnL Aggregation**
     - **Validates: Requirements 12.5**
   
-  - [ ] 8.7 Implement fee inclusion in realized PnL
+  - [x] 8.7 Implement fee inclusion in realized PnL
     - Extract fees from transaction metadata
     - Include fees in realized PnL calculations
     - _Requirements: 12.7_
@@ -244,7 +244,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 27: Fee Inclusion in Realized PnL**
     - **Validates: Requirements 12.7**
   
-  - [ ] 8.9 Implement stale price handling
+  - [x] 8.9 Implement stale price handling
     - Use last known price when current price unavailable
     - Flag PnL calculation as stale
     - _Requirements: 12.6_
@@ -257,13 +257,13 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 24: PnL Snapshot Completeness**
     - **Validates: Requirements 12.4**
   
-  - [ ] 8.12 Implement cron job for PnL updates
+  - [x] 8.12 Implement cron job for PnL updates
     - Set up node-cron to run every 10 minutes
     - Call calculateAllWallets for all registered wallets
     - _Requirements: 12.3_
 
-- [ ] 9. Implement risk analysis engine
-  - [ ] 9.1 Create risk analyzer service
+- [x] 9. Implement risk analysis engine
+  - [x] 9.1 Create risk analyzer service
     - Implement analyzeTransaction with anomaly score calculation
     - Implement calculateWalletRisk with aggregated metrics
     - Implement detectAnomalies with z-score calculation
@@ -273,7 +273,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 28: Anomaly Score Calculation**
     - **Validates: Requirements 6.1**
   
-  - [ ] 9.3 Implement anomaly flagging and alerting
+  - [x] 9.3 Implement anomaly flagging and alerting
     - Flag transactions exceeding anomaly threshold
     - Emit security.anomaly event for high-risk transactions
     - _Requirements: 6.2_
@@ -282,7 +282,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 29: Anomaly Flagging and Alerting**
     - **Validates: Requirements 6.2**
   
-  - [ ] 9.5 Implement malicious address tracking
+  - [x] 9.5 Implement malicious address tracking
     - Query malicious_addresses table
     - Flag transactions involving known malicious addresses
     - _Requirements: 6.4_
@@ -314,8 +314,8 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
 - [ ] 11. Checkpoint - Ensure calculation engines tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 12. Implement event emitter service
-  - [ ] 12.1 Create event emitter with WebSocket support
+- [x] 12. Implement event emitter service
+  - [x] 12.1 Create event emitter with WebSocket support
     - Implement emitTransactionEvent
     - Implement emitBalanceUpdateEvent
     - Implement emitAnomalyEvent
