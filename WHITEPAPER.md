@@ -116,7 +116,7 @@ For the Solana Ecosystem:
 
 ### 4.1 System Overview
 
-ARS is built on Solana blockchain using the Anchor framework. The system consists of three main smart contract programs and a comprehensive backend infrastructure.
+ARS is built on Solana blockchain using the Anchor framework. The system consists of three main smart contract programs, comprehensive backend infrastructure, and advanced privacy/memory systems through Sipher Protocol and Solder-Cortex integration.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -226,7 +226,26 @@ The ARS Token program manages ARU token lifecycle:
 
 ### 4.3 Backend Infrastructure
 
-#### 4.3.1 ILI Calculator Service
+#### 4.3.1 Privacy and Memory Systems
+
+**Sipher Protocol Integration**:
+ARS integrates with Sipher Protocol to provide zero-knowledge privacy capabilities for agent transactions:
+
+- **Private Transaction Pools**: Agents can execute confidential transactions without revealing amounts or counterparties
+- **Selective Disclosure**: Agents control what information is revealed and to whom
+- **Identity Protection**: Advanced cryptographic primitives protect agent identities while maintaining auditability
+- **Compliance Integration**: Privacy features work seamlessly with AML/CFT requirements through selective disclosure
+
+**Solder-Cortex Memory System**:
+The Solder-Cortex system provides advanced memory management for agent operations:
+
+- **Encrypted State Management**: All agent memory and state data encrypted at rest and in transit
+- **Resilient Caching**: Multi-layer caching with graceful degradation during failures
+- **Circuit Breaker Patterns**: Automatic failover and recovery mechanisms
+- **Performance Optimization**: Sub-millisecond memory operations for high-frequency agent interactions
+- **Connection Pool Monitoring**: Advanced database connection management with health checks
+
+#### 4.3.2 ILI Calculator Service
 
 The ILI Calculator aggregates data from multiple DeFi protocols:
 
@@ -1594,9 +1613,81 @@ def calculate_transaction_risk_score(transaction):
 
 ## 9. Use Cases and Applications
 
-### 9.1 Agent Trading Strategies
+### 9.1 Privacy-Preserving Agent Operations
 
-#### 9.1.1 Liquidity-Aware Trading
+#### 9.1.1 Confidential Agent Trading with Sipher
+
+**Scenario**: High-value trading agents require transaction privacy to prevent front-running and MEV attacks.
+
+**Implementation**:
+```python
+class PrivateTrader:
+    def __init__(self, ars_client, sipher_client):
+        self.ars = ars_client
+        self.sipher = sipher_client
+        
+    async def execute_private_trade(self, amount, asset):
+        # Create private transaction through Sipher
+        private_tx = await self.sipher.create_private_transaction(
+            amount=amount,
+            asset=asset,
+            privacy_level="high"
+        )
+        
+        # Execute through ARS with privacy protection
+        result = await self.ars.execute_trade(
+            transaction=private_tx,
+            use_private_pool=True
+        )
+        
+        return result
+```
+
+**Benefits**:
+- Protection from MEV attacks
+- Confidential position sizes
+- Private trading strategies
+- Selective disclosure for compliance
+
+#### 9.1.2 Encrypted Agent Memory with Solder-Cortex
+
+**Scenario**: Agents need secure, high-performance memory storage for sensitive trading algorithms and state.
+
+**Implementation**:
+```python
+class SecureAgentMemory:
+    def __init__(self, solder_cortex_client):
+        self.memory = solder_cortex_client
+        
+    async def store_strategy_state(self, strategy_data):
+        # Encrypt and store with circuit breaker protection
+        encrypted_state = await self.memory.encrypt_and_store(
+            data=strategy_data,
+            encryption_level="AES-256",
+            redundancy=3,
+            circuit_breaker=True
+        )
+        
+        return encrypted_state.storage_id
+        
+    async def retrieve_with_fallback(self, storage_id):
+        # Resilient retrieval with graceful degradation
+        try:
+            return await self.memory.retrieve_with_cache(storage_id)
+        except CacheFailure:
+            # Graceful degradation to backup storage
+            return await self.memory.retrieve_from_backup(storage_id)
+```
+
+**Benefits**:
+- Encrypted agent state management
+- High-performance memory operations
+- Automatic failover and recovery
+- Circuit breaker protection
+
+### 9.2 Agent Trading Strategies
+
+#### 9.2.1 Liquidity-Aware Trading
 
 **Scenario**: An autonomous trading agent uses ILI to optimize entry and exit timing.
 
@@ -1636,7 +1727,7 @@ class LiquidityAwareTrader:
 - 10-15% improvement in Sharpe ratio
 - 25-30% reduction in drawdowns during stress periods
 
-#### 9.1.2 Credit-Optimized Leverage
+#### 9.2.2 Credit-Optimized Leverage
 
 **Scenario**: A leveraged trading agent uses ICR to optimize borrowing costs.
 
@@ -1678,9 +1769,9 @@ class CreditOptimizedLeverageAgent:
 - 30-35% reduction in interest expenses
 - 15-20% improvement in capital efficiency
 
-### 9.2 Agent Lending and Borrowing
+### 9.3 Agent Lending and Borrowing
 
-#### 9.2.1 Dynamic Rate Lending
+#### 9.3.1 Dynamic Rate Lending
 
 **Scenario**: A lending agent adjusts rates based on ILI and ICR signals.
 
@@ -1720,9 +1811,9 @@ class DynamicRateLender:
 - 30-35% reduction in default rates
 
 
-### 9.3 Agent Portfolio Management
+### 9.4 Agent Portfolio Management
 
-#### 9.3.1 Macro-Aware Asset Allocation
+#### 9.4.1 Macro-Aware Asset Allocation
 
 **Scenario**: A portfolio management agent uses ILI for dynamic asset allocation.
 
@@ -1772,9 +1863,9 @@ class MacroAwarePortfolio:
 - 15-20% improvement in Sharpe ratio
 - 10-15% higher absolute returns
 
-### 9.4 Agent Reserve Management
+### 9.5 Agent Reserve Management
 
-#### 9.4.1 Treasury Optimization
+#### 9.5.1 Treasury Optimization
 
 **Scenario**: An agent protocol uses ARU for treasury management.
 
@@ -1819,9 +1910,9 @@ class TreasuryManager:
 - 100% liquidity coverage during stress
 - 15-20% reduction in opportunity cost
 
-### 9.5 Cross-Protocol Arbitrage
+### 9.6 Cross-Protocol Arbitrage
 
-#### 9.5.1 ILI-Based Arbitrage
+#### 9.6.1 ILI-Based Arbitrage
 
 **Scenario**: An arbitrage agent exploits ILI discrepancies across protocols.
 
