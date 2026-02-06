@@ -11,6 +11,22 @@ const logger = {
 };
 
 /**
+ * Audit log entry structure
+ */
+export interface AuditLogEntry {
+  event_type: 'disclosure' | 'decryption' | 'revocation' | 'key_access' | 'encryption';
+  actor: string;
+  resource_type: 'viewing_key' | 'disclosure' | 'transaction' | 'commitment';
+  resource_id: string;
+  action: string;
+  result: 'success' | 'failure';
+  ip_address?: string;
+  user_agent?: string;
+  metadata: Record<string, any>;
+  timestamp: string;
+}
+
+/**
  * Disclosure record from database
  */
 export interface DisclosureRecord {
@@ -99,6 +115,22 @@ export class DisclosureService {
       );
       const expiresAt = new Date(Date.now() + expirationDays * 24 * 60 * 60 * 1000);
 
+      // Log audit event
+      await this.logDisclosureEvent({
+        event_type: 'encryption',
+        actor: auditorPublicKey,
+        resource_type: 'disclosure',
+        resource_id: result.keyHash,
+        action: 'encrypt_transaction_data',
+        result: 'success',
+        metadata: {
+          viewingKeyHash: viewingKey.hash,
+          expiresAt: expiresAt.toISOString(),
+          transactionFields: Object.keys(transactionData)
+        },
+        timestamp: new Date().toISOString()
+      });
+
       logger.info('Transaction data encrypted successfully', {
         keyHash: result.keyHash,
         expiresAt
@@ -110,6 +142,20 @@ export class DisclosureService {
         expiresAt: new Date(result.expiresAt)
       };
     } catch (error) {
+      // Log failed encryption attempt
+      await this.logDisclosureEvent({
+        event_type: 'encryption',
+        actor: auditorPublicKey,
+        resource_type: 'disclosure',
+        resource_id: viewingKey.hash,
+        action: 'encrypt_transaction_data',
+        result: 'failure',
+        metadata: {
+          error: error instanceof Error ? error.message : 'Unknown error'
+        },
+        timestamp: new Date().toISOString()
+      });
+      
       logger.error('Failed to encrypt transaction data', { error });
       throw error;
     }
@@ -137,6 +183,22 @@ export class DisclosureService {
         encrypted
       });
 
+      // Log successful decryption
+      await this.logDisclosureEvent({
+        event_type: 'decryption',
+        actor: viewingKey.hash,
+        resource_type: 'disclosure',
+        resource_id: encrypted.substring(0, 20) + '...',
+        action: 'decrypt_transaction_data',
+        result: 'success',
+        metadata: {
+          viewingKeyHash: viewingKey.hash,
+          viewingKeyPath: viewingKey.path,
+          decryptedFields: ['sender', 'recipient', 'amount', 'timestamp']
+        },
+        timestamp: new Date().toISOString()
+      });
+
       logger.info('Transaction data decrypted successfully');
 
       return {
@@ -147,6 +209,21 @@ export class DisclosureService {
         txSignature: decrypted.txSignature
       };
     } catch (error) {
+      // Log failed decryption attempt
+      await this.logDisclosureEvent({
+        event_type: 'decryption',
+        actor: viewingKey.hash,
+        resource_type: 'disclosure',
+        resource_id: encrypted.substring(0, 20) + '...',
+        action: 'decrypt_transaction_data',
+        result: 'failure',
+        metadata: {
+          viewingKeyHash: viewingKey.hash,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        },
+        timestamp: new Date().toISOString()
+      });
+      
       logger.error('Failed to decrypt transaction data', { error });
       throw error;
     }
@@ -237,27 +314,71 @@ export class DisclosureService {
   }
 
   /**
-   * Log disclosure event for audit trail
+   * Log disclosure event to immutable audit log
    * 
-   * @param event - Disclosure event details
+   * SECURITY FIX (VULN-004): Implement proper audit logging
+   * 
+   * @param event - Audit log entry
    */
-  private async logDisclosureEvent(event: any): Promise<void> {
+  private async logDisclosureEvent(event: AuditLogEntry): Promise<void> {
     try {
-      // In production, this should write to a dedicated audit log table
-      // or external audit logging service
-      logger.info('Disclosure event logged', event);
+      // Write to dedicated audit log table (append-only)
+      const { error } = await this.database
+        .from('audit_log')
+        .insert({
+          event_type: event.event_type,
+          actor: event.actor,
+          resource_type: event.resource_type,
+          resource_id: event.resource_id,
+          action: event.action,
+          result: event.result,
+          ip_address: event.ip_address,
+          user_agent: event.user_agent,
+          metadata: event.metadata,
+          timestamp: event.timestamp
+        });
 
-      // TODO: Implement proper audit logging
-      // await this.database.from('audit_log').insert({
-      //   event_type: event.type,
-      //   disclosure_id: event.disclosureId,
-      //   timestamp: event.timestamp.toISOString(),
-      //   details: JSON.stringify(event)
-      // });
+      if (error) {
+        // Audit logging failure is CRITICAL - must not be silent
+        logger.error('CRITICAL: Audit log write failed', { error, event });
+        
+        // Alert security team
+        await this.alertSecurityTeam('Audit log write failure', { error, event });
+        
+        // In production, consider failing the operation if audit log fails
+        // For now, we'll log the error but not throw to avoid breaking operations
+        // Uncomment the following line for strict audit enforcement:
+        // throw new Error('Audit logging failed - operation aborted for compliance');
+      } else {
+        logger.info('Audit event logged successfully', {
+          eventType: event.event_type,
+          actor: event.actor,
+          resourceType: event.resource_type
+        });
+      }
     } catch (error) {
-      logger.error('Failed to log disclosure event', { error, event });
-      // Don't throw - logging failure shouldn't break the operation
+      logger.error('Failed to log audit event', { error, event });
+      // In production with strict compliance, re-throw the error
+      // throw error;
     }
+  }
+
+  /**
+   * Alert security team of critical events
+   * 
+   * @param message - Alert message
+   * @param context - Alert context
+   */
+  private async alertSecurityTeam(message: string, context: any): Promise<void> {
+    // Implement alerting (PagerDuty, Slack, email, etc.)
+    logger.error(`SECURITY ALERT: ${message}`, context);
+    
+    // TODO: Integrate with alerting system
+    // Examples:
+    // - Send to PagerDuty
+    // - Post to Slack security channel
+    // - Send email to security team
+    // - Trigger incident response workflow
   }
 
   /**

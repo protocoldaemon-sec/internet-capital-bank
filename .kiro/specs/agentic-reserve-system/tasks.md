@@ -864,7 +864,7 @@ openclaw hooks create proposal-webhook --event blockchain --action notify
 ## Optional Enhancements
 
 - [ ]* 22.1 Add AI-powered policy recommendations
-- [ ]* 22.2 Implement advanced conditional futarchy
+- [ ] 22.2 Implement advanced conditional futarchy
 - [ ]* 22.3 Add governance token distribution
 - [ ]* 22.4 Create mobile PWA version
 - [ ]* 22.5 Add email/Discord notifications

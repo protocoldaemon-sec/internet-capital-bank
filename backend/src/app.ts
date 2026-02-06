@@ -11,6 +11,7 @@ import reserveRoutes from './routes/reserve';
 import revenueRoutes from './routes/revenue';
 import agentRoutes from './routes/agents';
 import privacyRoutes from './routes/privacy';
+import complianceRoutes from './routes/compliance';
 
 export function createApp(): Application {
   const app = express();
@@ -41,9 +42,14 @@ export function createApp(): Application {
   app.use('/api/v1/revenue', revenueRoutes);
   app.use('/api/v1/agents', agentRoutes);
   
-  // Privacy routes (Phase 1: Shielded Transfers)
+  // Privacy routes (Phase 1 & 2: Shielded Transfers, MEV Protection)
   if (config.privacy?.enabled) {
     app.use('/api/v1/privacy', privacyRoutes);
+  }
+
+  // Compliance routes (Phase 3: Compliance Layer)
+  if (config.privacy?.enabled) {
+    app.use('/api/v1/compliance', complianceRoutes);
   }
 
   // Error handling middleware

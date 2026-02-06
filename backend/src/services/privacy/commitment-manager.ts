@@ -13,6 +13,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { SipherClient } from './sipher/sipher-client';
 import { EncryptionService, EncryptedData } from './encryption-service';
 import { Commitment } from './types';
+import { getCachedData, setCachedData } from '../redis';
 
 /**
  * Simple logger utility
@@ -49,7 +50,9 @@ export class CommitmentManager {
   private sipherClient: SipherClient;
   private database: SupabaseClient;
   private encryption: EncryptionService;
-  private readonly ENCRYPTION_KEY = 'commitment-blinding-factor-key'; // Master key for blinding factors
+  private readonly encryptionKey: string;
+  private readonly CACHE_TTL = 600; // 10 minutes cache for commitments
+  private readonly CACHE_KEY_PREFIX = 'commitment:';
 
   /**
    * Create a new CommitmentManager
@@ -57,15 +60,39 @@ export class CommitmentManager {
    * @param sipherClient - Sipher API client
    * @param database - Supabase database client
    * @param encryption - Encryption service
+   * @param blindingFactorKey - Encryption key for blinding factors (required)
    */
   constructor(
     sipherClient: SipherClient,
     database: SupabaseClient,
-    encryption: EncryptionService
+    encryption: EncryptionService,
+    blindingFactorKey?: string
   ) {
     this.sipherClient = sipherClient;
     this.database = database;
     this.encryption = encryption;
+    
+    // SECURITY FIX (VULN-001): Load from secure environment variable
+    this.encryptionKey = blindingFactorKey || process.env.BLINDING_FACTOR_ENCRYPTION_KEY || '';
+    
+    if (!this.encryptionKey) {
+      throw new Error(
+        'BLINDING_FACTOR_ENCRYPTION_KEY is required. Set environment variable or provide via constructor. ' +
+        'For production, use HSM-backed key management.'
+      );
+    }
+    
+    if (this.encryptionKey.length < 32) {
+      throw new Error('Blinding factor encryption key must be at least 32 characters');
+    }
+    
+    // Validate key is not a common/default value
+    const insecureKeys = ['commitment-blinding-factor-key', 'test-key', 'default-key', 'password'];
+    if (insecureKeys.includes(this.encryptionKey.toLowerCase())) {
+      throw new Error('Blinding factor encryption key appears to be a default/test value. Use a cryptographically secure key.');
+    }
+    
+    logger.info('CommitmentManager initialized with secure encryption key');
   }
 
   /**
@@ -326,11 +353,27 @@ export class CommitmentManager {
   /**
    * Get commitment by ID
    * 
+   * PERFORMANCE OPTIMIZATION: Caches commitment records to reduce database queries.
+   * 
    * @param id - Commitment ID
    * @returns Commitment record or null if not found
    */
   async getById(id: number): Promise<CommitmentRecord | null> {
     try {
+      // Check cache first
+      const cacheKey = `${this.CACHE_KEY_PREFIX}${id}`;
+      const cached = await getCachedData<CommitmentRecord>(cacheKey);
+      
+      if (cached) {
+        logger.info('Commitment retrieved from cache', { id });
+        // Convert date strings back to Date objects
+        return {
+          ...cached,
+          created_at: new Date(cached.created_at),
+          verified_at: cached.verified_at ? new Date(cached.verified_at) : undefined
+        };
+      }
+
       const { data, error } = await this.database
         .from('commitments')
         .select('*')
@@ -346,7 +389,7 @@ export class CommitmentManager {
         throw new Error(`Database error: ${error.message}`);
       }
 
-      return {
+      const record: CommitmentRecord = {
         id: data.id,
         commitment: data.commitment,
         encrypted_blinding_factor: data.encrypted_blinding_factor,
@@ -354,6 +397,11 @@ export class CommitmentManager {
         created_at: new Date(data.created_at),
         verified_at: data.verified_at ? new Date(data.verified_at) : undefined
       };
+
+      // Cache the result
+      await setCachedData(cacheKey, record, this.CACHE_TTL);
+
+      return record;
     } catch (error) {
       logger.error('Failed to get commitment by ID', { error, id });
       throw error;
@@ -370,7 +418,7 @@ export class CommitmentManager {
     try {
       const encrypted: EncryptedData = this.encryption.encrypt(
         blindingFactor,
-        this.ENCRYPTION_KEY
+        this.encryptionKey
       );
 
       // Store as JSON string
@@ -393,7 +441,7 @@ export class CommitmentManager {
       
       const decrypted = this.encryption.decrypt(
         encrypted,
-        this.ENCRYPTION_KEY
+        this.encryptionKey
       );
 
       return decrypted;

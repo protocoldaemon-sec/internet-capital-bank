@@ -61,13 +61,28 @@ export class ViewingKeyManager {
     this.sipherClient = sipherClient;
     this.database = database;
     this.encryption = encryption;
-    // Use protocol master key for encrypting viewing keys
-    // In production, this should come from HSM or secure key management
-    this.protocolMasterKey = protocolMasterKey || process.env.PROTOCOL_MASTER_KEY || 'default-master-key';
     
-    if (this.protocolMasterKey === 'default-master-key') {
-      logger.warn('Using default protocol master key. This is insecure for production!');
+    // SECURITY FIX (VULN-002): Enforce secure master key requirement
+    this.protocolMasterKey = protocolMasterKey || process.env.PROTOCOL_MASTER_KEY || '';
+    
+    if (!this.protocolMasterKey) {
+      throw new Error(
+        'PROTOCOL_MASTER_KEY is required. Set environment variable or provide via constructor. ' +
+        'For production, use HSM-backed key management.'
+      );
     }
+    
+    if (this.protocolMasterKey.length < 32) {
+      throw new Error('Protocol master key must be at least 32 characters');
+    }
+    
+    // Validate key is not a common/default value
+    const insecureKeys = ['default-master-key', 'test-key', 'master-key', 'password', 'protocol-key'];
+    if (insecureKeys.includes(this.protocolMasterKey.toLowerCase())) {
+      throw new Error('Protocol master key appears to be a default/test value. Use a cryptographically secure key.');
+    }
+    
+    logger.info('ViewingKeyManager initialized with secure protocol master key');
   }
 
   /**

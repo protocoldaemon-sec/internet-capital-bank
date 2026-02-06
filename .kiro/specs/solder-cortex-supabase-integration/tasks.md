@@ -6,20 +6,20 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
 
 ## Tasks
 
-- [ ] 1. Set up database schema and migrations
+- [x] 1. Set up database schema and migrations
   - Create Supabase migration files for all memory tables
   - Create indexes for query performance optimization
   - Set up database connection pooling configuration
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8_
 
-- [ ] 1.1 Write unit tests for schema validation
+- [x] 1.1 Write unit tests for schema validation
   - Test table existence and column structure
   - Test index creation
   - Test foreign key constraints
   - _Requirements: 1.1-1.8_
 
 - [ ] 2. Implement LYS Labs WebSocket client
-  - [ ] 2.1 Create WebSocket client with connection management
+  - [x] 2.1 Create WebSocket client with connection management
     - Implement connect/disconnect methods
     - Implement subscription management (subscribe/unsubscribe wallet)
     - Implement event handlers (onTransaction, onError, onReconnect)
@@ -29,7 +29,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 2: Wallet Subscription Consistency**
     - **Validates: Requirements 2.2, 2.6**
   
-  - [ ] 2.3 Implement exponential backoff reconnection logic
+  - [x] 2.3 Implement exponential backoff reconnection logic
     - Implement retry logic with delays (1s, 2s, 4s, 8s, 16s)
     - Maintain subscription list for re-subscription after reconnect
     - _Requirements: 2.5, 2.6_
@@ -38,7 +38,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 4: WebSocket Reconnection Resilience**
     - **Validates: Requirements 2.5**
   
-  - [ ] 2.5 Implement transaction data validation
+  - [x] 2.5 Implement transaction data validation
     - Validate incoming messages against LYSTransaction schema
     - Handle invalid data gracefully
     - _Requirements: 2.7, 2.8_
@@ -49,7 +49,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
 
 
 - [ ] 3. Implement transaction indexer
-  - [ ] 3.1 Create transaction indexer service
+  - [x] 3.1 Create transaction indexer service
     - Implement indexTransaction method with Supabase insert
     - Implement balance update logic (atomic transaction)
     - Parse transaction metadata to extract relevant fields
@@ -59,18 +59,18 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 1: Transaction Indexing Completeness**
     - **Validates: Requirements 2.3, 2.4**
   
-  - [ ] 3.3 Implement batch indexing for historical backfill
+  - [x] 3.3 Implement batch indexing for historical backfill
     - Implement indexTransactionBatch with batch inserts (100 per batch)
     - Implement backfillWallet method with progress tracking
     - Update indexing status in wallet_registrations table
     - _Requirements: 2.3, 2.4_
   
-  - [ ] 3.4 Implement transaction deduplication
+  - [x] 3.4 Implement transaction deduplication
     - Use transaction signature as unique key
     - Handle duplicate transaction attempts gracefully
     - _Requirements: 2.3_
   
-  - [ ] 3.5 Implement privacy-protected transaction handling
+  - [x] 3.5 Implement privacy-protected transaction handling
     - Encrypt sensitive fields for privacy-protected transactions
     - Store encrypted metadata with agent-specific keys
     - _Requirements: 8.3, 8.4_
@@ -80,7 +80,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Validates: Requirements 8.3, 8.4**
 
 - [ ] 4. Implement wallet registration manager
-  - [ ] 4.1 Create wallet registration service
+  - [x] 4.1 Create wallet registration service
     - Implement registerWallet with privacy flag support
     - Implement unregisterWallet with data retention
     - Implement getRegistration and listRegistrations
@@ -94,12 +94,12 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 20: Unregistration Data Retention**
     - **Validates: Requirements 11.7**
   
-  - [ ] 4.4 Implement auto-registration of ARS protocol wallets
+  - [x] 4.4 Implement auto-registration of ARS protocol wallets
     - Read wallet addresses from environment configuration
     - Auto-register on service startup
     - _Requirements: 11.1_
   
-  - [ ] 4.5 Implement bulk wallet registration
+  - [x] 4.5 Implement bulk wallet registration
     - Implement registerWalletsBulk with atomic operation
     - Support CSV upload via API endpoint
     - _Requirements: 11.8_
@@ -113,7 +113,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Validates: Requirements 8.1**
 
 - [ ] 5. Implement Redis cache layer
-  - [ ] 5.1 Create cache service with Redis connection pooling
+  - [x] 5.1 Create cache service with Redis connection pooling
     - Implement get/set/delete methods
     - Implement cache key generation with SHA-256 hash
     - Configure connection pool (10-50 connections)
@@ -123,7 +123,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 11: Cache Key Format Consistency**
     - **Validates: Requirements 9.5**
   
-  - [ ] 5.3 Implement cache invalidation logic
+  - [x] 5.3 Implement cache invalidation logic
     - Implement invalidation on transaction updates
     - Implement wildcard invalidation for wallet patterns
     - _Requirements: 9.4_
@@ -132,7 +132,7 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 10: Cache Invalidation on Update**
     - **Validates: Requirements 9.4**
   
-  - [ ] 5.5 Implement cache eviction under memory pressure
+  - [x] 5.5 Implement cache eviction under memory pressure
     - Monitor cache memory usage
     - Implement LRU eviction when usage exceeds 80%
     - _Requirements: 9.7_
@@ -141,11 +141,11 @@ This implementation plan breaks down the Solder Cortex memory layer integration 
     - **Property 12: Cache Eviction Under Pressure**
     - **Validates: Requirements 9.7**
   
-  - [ ] 5.7 Implement cache warming on startup
+  - [x] 5.7 Implement cache warming on startup
     - Pre-load cache for ARS protocol wallets
     - _Requirements: 9.6_
 
-- [ ] 6. Checkpoint - Ensure core data layer tests pass
+- [x] 6. Checkpoint - Ensure core data layer tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 7. Implement query API service

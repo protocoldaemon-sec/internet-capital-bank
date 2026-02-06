@@ -10,11 +10,23 @@ export const config = {
     url: process.env.SUPABASE_URL || 'http://localhost:8000',
     anonKey: process.env.SUPABASE_ANON_KEY || '',
     serviceKey: process.env.SUPABASE_SERVICE_KEY || '',
+    // Connection pooling configuration for Memory Service
+    pool: {
+      min: parseInt(process.env.SUPABASE_POOL_MIN || '20', 10),
+      max: parseInt(process.env.SUPABASE_POOL_MAX || '100', 10),
+      connectionTimeoutMillis: parseInt(process.env.SUPABASE_CONNECTION_TIMEOUT || '30000', 10),
+      idleTimeoutMillis: parseInt(process.env.SUPABASE_IDLE_TIMEOUT || '600000', 10), // 10 minutes
+    },
   },
   
   redis: {
     url: process.env.REDIS_URL || 'redis://localhost:6379',
     password: process.env.REDIS_PASSWORD || '',
+    // Connection pooling configuration for Memory Service cache layer
+    pool: {
+      min: parseInt(process.env.REDIS_POOL_MIN || '10', 10),
+      max: parseInt(process.env.REDIS_POOL_MAX || '50', 10),
+    },
   },
   
   solana: {
@@ -63,5 +75,68 @@ export const config = {
   rateLimit: {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000', 10),
     maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
+  },
+  
+  // Memory Service configuration for Solder Cortex integration
+  memoryService: {
+    // LYS Labs WebSocket API configuration
+    lysLabs: {
+      wsUrl: process.env.LYS_LABS_WS_URL || 'wss://api.lyslabs.io/v1/ws',
+      apiKey: process.env.LYS_LABS_API_KEY || '',
+      reconnectAttempts: parseInt(process.env.LYS_LABS_RECONNECT_ATTEMPTS || '5', 10),
+      reconnectDelays: [1000, 2000, 4000, 8000, 16000], // Exponential backoff in ms
+    },
+    
+    // Cache configuration
+    cache: {
+      ttl: parseInt(process.env.MEMORY_CACHE_TTL || '300', 10), // 5 minutes in seconds
+      memoryThreshold: parseFloat(process.env.MEMORY_CACHE_THRESHOLD || '0.8'), // 80%
+      warmupEnabled: process.env.MEMORY_CACHE_WARMUP === 'true',
+    },
+    
+    // Query configuration
+    query: {
+      defaultPageSize: parseInt(process.env.MEMORY_QUERY_PAGE_SIZE || '50', 10),
+      maxPageSize: parseInt(process.env.MEMORY_QUERY_MAX_PAGE_SIZE || '1000', 10),
+      cachedQueryTimeoutMs: parseInt(process.env.MEMORY_CACHED_QUERY_TIMEOUT || '200', 10),
+      slowQueryThresholdMs: parseInt(process.env.MEMORY_SLOW_QUERY_THRESHOLD || '1000', 10),
+    },
+    
+    // PnL calculation configuration
+    pnl: {
+      updateIntervalMinutes: parseInt(process.env.MEMORY_PNL_UPDATE_INTERVAL || '10', 10),
+      stalePriceThresholdMinutes: parseInt(process.env.MEMORY_STALE_PRICE_THRESHOLD || '15', 10),
+      costBasisMethod: process.env.MEMORY_COST_BASIS_METHOD || 'FIFO',
+    },
+    
+    // Risk analysis configuration
+    risk: {
+      anomalyThreshold: parseFloat(process.env.MEMORY_ANOMALY_THRESHOLD || '3.0'), // z-score
+      anomalyWindowHours: [1, 24, 168], // 1h, 24h, 7d
+    },
+    
+    // Event emission configuration
+    events: {
+      rateLimit: parseInt(process.env.MEMORY_EVENT_RATE_LIMIT || '100', 10), // events per second per agent
+      heartbeatIntervalSeconds: parseInt(process.env.MEMORY_EVENT_HEARTBEAT || '30', 10),
+    },
+    
+    // Circuit breaker configuration
+    circuitBreaker: {
+      failureThreshold: parseInt(process.env.MEMORY_CIRCUIT_BREAKER_THRESHOLD || '5', 10),
+      openDurationMs: parseInt(process.env.MEMORY_CIRCUIT_BREAKER_DURATION || '300000', 10), // 5 minutes
+    },
+    
+    // Retry configuration
+    retry: {
+      maxAttempts: parseInt(process.env.MEMORY_RETRY_MAX_ATTEMPTS || '3', 10),
+      delays: [1000, 2000, 4000], // Exponential backoff in ms
+    },
+    
+    // Auto-registration configuration
+    autoRegister: {
+      enabled: process.env.MEMORY_AUTO_REGISTER === 'true',
+      protocolWallets: (process.env.MEMORY_PROTOCOL_WALLETS || '').split(',').filter(Boolean),
+    },
   },
 };
